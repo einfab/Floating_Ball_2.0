@@ -8,14 +8,19 @@ Important: The sensor mustn't look in the air -- there is a bug then! Place a bo
 
 */
 
-//------Interrupt
-#include <TimerOne.h>
 //------Sensor
 #include <Wire.h>
 #include <VL53L1X.h>
 
 
-const int led = 3; //DIO
+const int led1 = 3; //DIO
+const int led2 = 4; //DIO
+
+//Timer1 preload
+const unsigned int PreloadTimer1 = 64911;
+//Timer2 preload
+const unsigned int PreloadTimer2 = 100;
+int Timer2Counter = 0;
 
 VL53L1X sensor;
 
@@ -40,24 +45,57 @@ void setup()
   sensor.setMeasurementTimingBudget(50000);
 
   sensor.startContinuous(100);
-  //--------------------------------------Interrupt
-  pinMode(led, OUTPUT);
-  Timer1.initialize(5000); //at the moment the controlloop triggers every second (150000 == 15ms)
-  Timer1.attachInterrupt(controlLoop);
-  Serial.print("Initialisation ok");
+
+  Serial.println("Initialisation ok");
+
+
+  //---------------------------------------------------------------End of Enable Interrupt
+  //Timer 1
+  TCCR1A = 0x00;
+  TCCR1B = 0x00;
+  TCCR1B |= (1 << CS12) + (0 << CS11) + (1 << CS10);//<--Prescaler 1024 // Prescaler 8: (0 << CS12) + (1 << CS11) + (0 << CS10);
+  TIMSK1 = (1 << TOIE1);
+  TCNT1 = PreloadTimer1; //This prload is used to achieve the 40ms timeperiode  f = sysclock/(prescaler * (2^16 - preload))
+
+  //Timer 2
+  TCCR2A = 0x00;
+  TCCR2B = 0x00;
+  TCCR2B |= (1 << CS22) + (1 << CS21) + (1 << CS20);
+  TIMSK2 = (1 << TOIE2);
+  TCNT2 = PreloadTimer2;
+
+  Serial.println("Initialisation Interrupt ok");
+
+  //---------------------------------------------------------------End of Enable Interrupt
+
+
+
 }
 
-
-bool ledState = false;
+bool ledState1 = false;
+bool ledState2 = false;
 int measurements[5] = {0};
 
-void controlLoop(void)
+ISR(TIMER2_OVF_vect)
 {
-  digitalWrite(led, ledState ? HIGH : LOW);
-  ledState = !ledState;
-  measurement_flag = true;
+  TCNT2 = PreloadTimer2;
+  if(Timer2Counter >= 4)
+  {
+    digitalWrite(led2, ledState2 ? HIGH : LOW);
+    ledState2 = !ledState2;
+    measurement_flag = true;
+    Timer2Counter = 0;
+  }
+  else{Timer2Counter++;}
 }
-  
+
+ISR(TIMER1_OVF_vect)
+{
+  TCNT1 = PreloadTimer1;
+  digitalWrite(led1, ledState1 ? HIGH : LOW);
+  ledState1 = !ledState1;
+  //measurement_flag = true;
+}
 
 void loop(void)
 {
