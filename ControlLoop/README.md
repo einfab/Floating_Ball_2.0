@@ -1,6 +1,6 @@
 # ControlLoop
 
-## Hardware Interrupt
+## Hardware Interrupt Testing in the ArduinoIDE
 
 ### For the code we used the following guides:
 ### https://wolles-elektronikkiste.de/timer-und-pwm-teil-1
