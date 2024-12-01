@@ -1,6 +1,5 @@
 function ball_motor_gui
     hFig = figure('Position', [100, 100, 800, 600], 'Name', 'Ball and Motor Control', 'MenuBar', 'none', 'NumberTitle', 'off', 'Resize', 'off');
-
     ax1 = axes('Parent', hFig, 'Position', [0.1, 0.55, 0.35, 0.4]);
     xlabel(ax1, 'Zeit (s)');
     ylabel(ax1, 'Höhe (m)');
@@ -10,7 +9,6 @@ function ball_motor_gui
     ballHeightPlot = plot(ax1, NaN, NaN, 'b', 'LineWidth', 2);
     refHeightPlot = plot(ax1, NaN, NaN, 'r--', 'LineWidth', 2);
     ylim(ax1, [0, 0.5]);
-
     ax2 = axes('Parent', hFig, 'Position', [0.55, 0.55, 0.35, 0.4]);
     xlabel(ax2, 'Zeit (s)');
     ylabel(ax2, 'Drehzahl (RPM)');
@@ -19,27 +17,19 @@ function ball_motor_gui
     hold(ax2, 'on');
     motorSpeedPlot = plot(ax2, NaN, NaN, 'g', 'LineWidth', 2);
     ylim(ax2, [0, 10000]);
-
     voltageText = uicontrol('Style', 'text', 'Position', [600, 160, 160, 30], 'String', 'Spannung: 0 V', 'FontSize', 12, 'BackgroundColor', 'white');
-
     uicontrol('Style', 'text', 'Position', [30, 220, 150, 20], 'String', 'Vorgegebene Höhe (mm):', 'HorizontalAlignment', 'right', 'FontSize', 10);
     inputRefHeight = uicontrol('Style', 'edit', 'Position', [180, 220, 100, 20], 'String', '200', 'Callback', @updateRefHeight);
-
     uicontrol('Style', 'text', 'Position', [10, 120-56, 50, 20], 'String', 'P:', 'HorizontalAlignment', 'right', 'FontSize', 10);
     inputP = uicontrol('Style', 'edit', 'Position', [70, 120-56, 100, 20], 'String', '1.0', 'Callback', @updatePID);
-    
     uicontrol('Style', 'text', 'Position', [10, 90-56, 50, 20], 'String', 'I:', 'HorizontalAlignment', 'right', 'FontSize', 10);
     inputI = uicontrol('Style', 'edit', 'Position', [70, 90-56, 100, 20], 'String', '0.5', 'Callback', @updatePID);
-    
     uicontrol('Style', 'text', 'Position', [10, 60-56, 50, 20], 'String', 'D:', 'HorizontalAlignment', 'right', 'FontSize', 10);
     inputD = uicontrol('Style', 'edit', 'Position', [70, 60-56, 100, 20], 'String', '0.1', 'Callback', @updatePID);
-
     handles.saveButton = uicontrol('Style', 'pushbutton', 'String', 'Save', 'Position', [600, 50, 100, 40], 'Callback', @saveData);
     set(handles.saveButton, 'Enable', 'off');
-
-    handles.t = timer('ExecutionMode', 'fixedRate', 'Period', 0.1, 'TimerFcn', @updateData);
+    handles.t = timer('ExecutionMode', 'fixedRate', 'Period', 0.1, 'TimerFcn', @(~, ~) updateData(hFig));
     handles.isRunning = false;
-
     handles.ballHeightPlot = ballHeightPlot;
     handles.motorSpeedPlot = motorSpeedPlot;
     handles.voltageText = voltageText;
@@ -52,9 +42,7 @@ function ball_motor_gui
     handles.P = 1.0;
     handles.I = 0.5;
     handles.D = 0.1;
-
     guidata(hFig, handles);
-
     uicontrol('Style', 'pushbutton', 'String', 'Start', 'Position', [180, 60, 100, 40], 'Callback', @startCallback);
     uicontrol('Style', 'pushbutton', 'String', 'Stop', 'Position', [180, 10, 100, 40], 'Callback', @stopCallback);
 
@@ -103,9 +91,8 @@ function ball_motor_gui
         end
     end
 
-    function updateData(~, ~)
+    function updateData(hFig)
         handles = guidata(hFig);
-
         if isempty(handles.t_data)
             handles.t_data = 0;
             handles.ballHeightData = 0;
@@ -116,21 +103,24 @@ function ball_motor_gui
             handles.ballHeightData(end+1) = 0.1 + 0.1 * sin(handles.t_data(end));
             handles.motorSpeedData(end+1) = 2000 + 500 * cos(handles.t_data(end));
         end
-
-        maxPoints = 500;
+        maxPoints = 1000;
         if length(handles.t_data) > maxPoints
             handles.t_data = handles.t_data(end-maxPoints+1:end);
             handles.ballHeightData = handles.ballHeightData(end-maxPoints+1:end);
             handles.motorSpeedData = handles.motorSpeedData(end-maxPoints+1:end);
         end
-
         set(handles.refHeightPlot, 'XData', handles.t_data, 'YData', handles.refHeight * ones(size(handles.t_data)));
         set(handles.ballHeightPlot, 'XData', handles.t_data, 'YData', handles.ballHeightData);
         set(handles.motorSpeedPlot, 'XData', handles.t_data, 'YData', handles.motorSpeedData);
-
+        if handles.t_data(end) > 10
+            xlim(handles.ballHeightPlot.Parent, [handles.t_data(end)-10, handles.t_data(end)]);
+            xlim(handles.motorSpeedPlot.Parent, [handles.t_data(end)-10, handles.t_data(end)]);
+        else
+            xlim(handles.ballHeightPlot.Parent, [0, 10]);
+            xlim(handles.motorSpeedPlot.Parent, [0, 10]);
+        end
         voltage = 5;
         set(handles.voltageText, 'String', sprintf('Spannung: %.2f V', voltage));
-
         guidata(hFig, handles);
     end
 end
