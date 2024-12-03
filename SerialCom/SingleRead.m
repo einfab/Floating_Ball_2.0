@@ -1,6 +1,6 @@
 function [Outtime, Outdistance] = SingleRead(arduino)
 time = readline(arduino);
-timeValue = str2double(time);
+timeValue = str2double(time)/1000;
 Outtime = timeValue;
 
 distance = readline(arduino);
