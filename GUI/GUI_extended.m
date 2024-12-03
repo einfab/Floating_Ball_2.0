@@ -1,4 +1,9 @@
 function ball_motor_gui(arduino)
+
+    Timerupdate = 0.2;
+
+
+
     hFig = figure('Position', [100, 100, 800, 600], 'Name', 'Ball and Motor Control', 'MenuBar', 'none', 'NumberTitle', 'off', 'Resize', 'off');
     ax1 = axes('Parent', hFig, 'Position', [0.1, 0.55, 0.35, 0.4]);
     xlabel(ax1, 'time in s');
@@ -28,7 +33,7 @@ function ball_motor_gui(arduino)
     inputD = uicontrol('Style', 'edit', 'Position', [70, 60-56, 100, 20], 'String', '0.1', 'Callback', @updatePID);
     handles.saveButton = uicontrol('Style', 'pushbutton', 'String', 'Save', 'Position', [600, 50, 100, 40], 'Callback', @saveData);
     set(handles.saveButton, 'Enable', 'off');
-    handles.t = timer('ExecutionMode', 'fixedRate', 'Period', 0.1, 'TimerFcn', @(~, ~) updateData(hFig,arduino));
+    handles.t = timer('ExecutionMode', 'fixedRate', 'Period', Timerupdate, 'TimerFcn', @(~, ~) updateData(hFig,arduino));
     handles.isRunning = false;
     handles.ballHeightPlot = ballHeightPlot;
     handles.motorSpeedPlot = motorSpeedPlot;
@@ -42,11 +47,14 @@ function ball_motor_gui(arduino)
     handles.P = 1.0;
     handles.I = 0.5;
     handles.D = 0.1;
+    handles.arduino = arduino;
     guidata(hFig, handles);
     uicontrol('Style', 'pushbutton', 'String', 'Start', 'Position', [180, 60, 100, 40], 'Callback', @startCallback);
     uicontrol('Style', 'pushbutton', 'String', 'Stop', 'Position', [180, 10, 100, 40], 'Callback', @stopCallback);
 
     function startCallback(~, ~)
+        writeline(handles.arduino, "Start");
+
         handles = guidata(hFig);
         handles.isRunning = true;
         start(handles.t);
@@ -55,6 +63,9 @@ function ball_motor_gui(arduino)
     end
 
     function stopCallback(~, ~)
+        writeline(handles.arduino, "Stop");
+        handles.arduino.flush()
+
         handles = guidata(hFig);
         handles.isRunning = false;
         stop(handles.t);
@@ -93,28 +104,23 @@ function ball_motor_gui(arduino)
 
     function updateData(hFig, arduino)
         handles = guidata(hFig);
-        try
-            [time, distance] = SingleRead(arduino);
-        catch
-            disp('Serial Communication error');
-            return;
-        end
-
-
-        if isempty(handles.t_data)
-            handles.t_data = 0;
-            handles.ballHeightData = 0;
-            handles.motorSpeedData = 0;
-        else
-            handles.t_data(end+1) = time;
-            handles.ballHeightData(end+1) = distance/1000;
-            handles.motorSpeedData(end+1) = 2000 + 500 * cos(handles.t_data(end));
-        end
-        maxPoints = 1000;
-        if length(handles.t_data) > maxPoints
-            handles.t_data = handles.t_data(end-maxPoints+1:end);
-            handles.ballHeightData = handles.ballHeightData(end-maxPoints+1:end);
-            handles.motorSpeedData = handles.motorSpeedData(end-maxPoints+1:end);
+        while arduino.NumBytesAvailable > 0
+                [time, distance] = SingleRead(arduino);
+            if isempty(handles.t_data)
+                handles.t_data = 0;
+                handles.ballHeightData = 0;
+                handles.motorSpeedData = 0;
+            else
+                handles.t_data(end+1) = time;
+                handles.ballHeightData(end+1) = distance/1000;
+                handles.motorSpeedData(end+1) = 2000 + 500 * cos(handles.t_data(end));
+            end
+            % maxPoints = 1000;
+            % if length(handles.t_data) > maxPoints
+            %     handles.t_data = handles.t_data(end-maxPoints+1:end);
+            %     handles.ballHeightData = handles.ballHeightData(end-maxPoints+1:end);
+            %     handles.motorSpeedData = handles.motorSpeedData(end-maxPoints+1:end);
+            % end
         end
         set(handles.refHeightPlot, 'XData', handles.t_data, 'YData', handles.refHeight * ones(size(handles.t_data)));
         set(handles.ballHeightPlot, 'XData', handles.t_data, 'YData', handles.ballHeightData);

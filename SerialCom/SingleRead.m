@@ -1,9 +1,17 @@
 function [Outtime, Outdistance] = SingleRead(arduino)
 time = readline(arduino);
-timeValue = str2double(time)/1000;
+% if isnan(time)
+    % timeValue = 0;
+% else
+    timeValue = str2double(time)/1000;
+% end
 Outtime = timeValue;
 
 distance = readline(arduino);
-distanceValue = str2double(distance);
+% if isnan(distance)
+    % distanceValue = 0;
+% else
+    distanceValue = str2double(distance);
+% end
 Outdistance = distanceValue;
 end
