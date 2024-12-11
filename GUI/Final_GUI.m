@@ -3,9 +3,19 @@ function ball_motor_gui(arduino)
     Timerupdate = 0.2;
     TimeWindow = 20; 
 
+    % Definition of the default parameters for the different controllers
+    regulators = struct( ...
+        'MotorControl', struct('P', 1.0, 'I', 0.5, 'D', 0.1, 'n', 1), ...
+        'Control', struct('P', 2.0, 'I', 1.0, 'D', 0.2, 'n', 5), ...
+        'CascadedControl', struct('P', 0.5, 'I', 0.2, 'D', 0.05, 'n', 2) ...
+    );
+    currentRegulator = 'MotorControl';
+
+    % Create the GUI
     hFig = figure('Position', [100, 100, 950, 750], 'Name', 'Ball and Motor Control', ...
                   'MenuBar', 'none', 'NumberTitle', 'off', 'Resize', 'off');
     
+    % Plot for the height of the ball
     ax1 = axes('Parent', hFig, 'Position', [0.1, 0.55, 0.35, 0.4]);
     xlabel(ax1, 'time in s');
     ylabel(ax1, 'height in mm');
@@ -16,6 +26,7 @@ function ball_motor_gui(arduino)
     refHeightPlot = plot(ax1, NaN, NaN, 'r--', 'LineWidth', 2);
     ylim(ax1, [0, 500]);
     
+    % Plot for the rotations of the motor
     ax2 = axes('Parent', hFig, 'Position', [0.55, 0.55, 0.35, 0.4]);
     xlabel(ax2, 'time in s');
     ylabel(ax2, 'rotations per minute');
@@ -25,6 +36,7 @@ function ball_motor_gui(arduino)
     motorSpeedPlot = plot(ax2, NaN, NaN, 'g', 'LineWidth', 2);
     ylim(ax2, [0, 10000]);
 
+    % Plot for the voltage applied to the motor
     ax3 = axes('Parent', hFig, 'Position', [0.55, 0.06, 0.35, 0.4]);
     xlabel(ax3, 'time in s');
     ylabel(ax3, 'U in V');
@@ -34,39 +46,69 @@ function ball_motor_gui(arduino)
     voltagePlot = plot(ax3, NaN, NaN, 'm', 'LineWidth', 2);
     ylim(ax3, [0, 10]);
 
+    % Text field for the set height
     uicontrol('Style', 'text', 'Position', [30, 300, 150, 20], 'String', 'Set height (mm):', ...
               'HorizontalAlignment', 'right', 'FontSize', 10);
     inputRefHeight = uicontrol('Style', 'edit', 'Position', [180, 300, 100, 20], 'String', '200', ...
                                'Callback', @updateRefHeight);
 
+    % Drop down menu for the controller selection
+    uicontrol('Style', 'text', 'Position', [30, 340, 150, 20], 'String', 'Select Controller:', ...
+              'HorizontalAlignment', 'right', 'FontSize', 10);
+    dropdown = uicontrol('Style', 'popupmenu', 'Position', [180, 340, 150, 20], ...
+                         'String', {'Motor Control', 'Control', 'Cascaded Control'}, ...
+                         'Callback', @updateRegulatorSelection);
+    
+    %Text field for the P value of the controller
     uicontrol('Style', 'text', 'Position', [10, 170, 50, 20], 'String', 'kP:', ...
               'HorizontalAlignment', 'right', 'FontSize', 10);
-    inputP = uicontrol('Style', 'edit', 'Position', [70, 170, 100, 20], 'String', '1.0', ...
-                       'Callback', @updatePID);
+    inputP = uicontrol('Style', 'edit', 'Position', [70, 170, 100, 20], ...
+                       'String', num2str(regulators.(currentRegulator).P), ...
+                       'Callback', @updateRegulatorParameters);
+
+    % Text field for the I value of the controller
     uicontrol('Style', 'text', 'Position', [10, 140, 50, 20], 'String', 'kI:', ...
               'HorizontalAlignment', 'right', 'FontSize', 10);
-    inputI = uicontrol('Style', 'edit', 'Position', [70, 140, 100, 20], 'String', '0.5', ...
-                       'Callback', @updatePID);
+    inputI = uicontrol('Style', 'edit', 'Position', [70, 140, 100, 20], ...
+                       'String', num2str(regulators.(currentRegulator).I), ...
+                       'Callback', @updateRegulatorParameters);
+
+    % Text field for the D value of the controller
     uicontrol('Style', 'text', 'Position', [10, 110, 50, 20], 'String', 'kD:', ...
               'HorizontalAlignment', 'right', 'FontSize', 10);
-    inputD = uicontrol('Style', 'edit', 'Position', [70, 110, 100, 20], 'String', '0.1', ...
-                       'Callback', @updatePID);
+    inputD = uicontrol('Style', 'edit', 'Position', [70, 110, 100, 20], ...
+                       'String', num2str(regulators.(currentRegulator).D), ...
+                       'Callback', @updateRegulatorParameters);
+
+    % Text field for the n value of the D part of the controller
     uicontrol('Style', 'text', 'Position', [10, 80, 50, 20], 'String', 'n:', ...
               'HorizontalAlignment', 'right', 'FontSize', 10);
-    inputn = uicontrol('Style', 'edit', 'Position', [70, 80, 100, 20], 'String', '1', ...
-                       'Callback', @updatePID);
+    inputn = uicontrol('Style', 'edit', 'Position', [70, 80, 100, 20], ...
+                       'String', num2str(regulators.(currentRegulator).n), ...
+                       'Callback', @updateRegulatorParameters);
 
+    % Start Button
     uicontrol('Style', 'pushbutton', 'String', 'Start', ...
               'Position', [200, 170, 100, 40], 'Callback', @startCallback);
+    % Stop Button
     uicontrol('Style', 'pushbutton', 'String', 'Stop', ...
               'Position', [200, 120, 100, 40], 'Callback', @stopCallback);
+
+    % Set Button to apply the set height
+    setButton = uicontrol('Style', 'pushbutton', 'String', 'Set', ...
+                      'Position', [290, 300, 50, 20], 'Callback', @applyRefHeight);
+
+    % Save Button
     handles.saveButton = uicontrol('Style', 'pushbutton', 'String', 'Save-data', ...
                                    'Position', [320, 120, 100, 40], 'Callback', @saveData);
+    % Save changes button to apply the controller settings
     handles.saveChanges = uicontrol('Style', 'pushbutton', 'String', 'Save-changes', ...
                                    'Position', [200, 70, 100, 40], 'Callback', @updatePID);
+    % Build and deploy button
     handles.BuildProgram = uicontrol('Style', 'pushbutton', 'String', 'Build&Deploy', ...
                                    'Position', [320, 70, 100, 40], 'Callback', @BuildProgram);
 
+    % Disable the save and save changes button
     set(handles.saveButton, 'Enable', 'off');
     set(handles.saveChanges, 'Enable', 'off');
 
@@ -115,16 +157,40 @@ function ball_motor_gui(arduino)
             refHeightMM = 200;
             set(src, 'String', '200');
         end
-        handles.refHeight = refHeightMM;
         guidata(hFig, handles);
     end
 
-    function updatePID(~, ~)
+    function applyRefHeight(~, ~)
         handles = guidata(hFig);
-        handles.P = str2double(get(inputP, 'String'));
-        handles.I = str2double(get(inputI, 'String'));
-        handles.D = str2double(get(inputD, 'String'));
+        refHeightMM = str2double(get(inputRefHeight, 'String'));
+        if isnan(refHeightMM) || refHeightMM < 0 || refHeightMM > 500
+            refHeightMM = 200; % Standardwert, wenn die Eingabe ungültig ist
+            set(inputRefHeight, 'String', '200');
+        end
+        handles.refHeight = refHeightMM; % Speichern des Referenzwertes
         guidata(hFig, handles);
+    end
+
+
+    function updateRegulatorSelection(src, ~)
+        items = {'MotorControl', 'Control', 'CascadedControl'};
+        currentRegulator = items{get(src, 'Value')};
+        updateParameterFields();
+    end
+
+    function updateParameterFields()
+            % Aktualisiere die Werte in den Eingabefeldern basierend auf dem ausgewählten Regler
+            set(inputP, 'String', num2str(regulators.(currentRegulator).P));
+            set(inputI, 'String', num2str(regulators.(currentRegulator).I));
+            set(inputD, 'String', num2str(regulators.(currentRegulator).D));
+            set(inputn, 'String', num2str(regulators.(currentRegulator).n));
+        end
+
+    function updateRegulatorParameters(~, ~)
+        regulators.(currentRegulator).P = str2double(get(inputP, 'String'));
+        regulators.(currentRegulator).I = str2double(get(inputI, 'String'));
+        regulators.(currentRegulator).D = str2double(get(inputD, 'String'));
+        regulators.(currentRegulator).n = str2double(get(inputn, 'String'));
     end
     
     function BuildProgram(~, ~)
