@@ -15,5 +15,5 @@ existingGui = findobj('Type', 'figure', 'Name', guiName);
 if ~isempty(existingGui)
     figure(existingGui);
 else
-    GUI_extended(arduino);
+    Final_GUI(arduino);
 end

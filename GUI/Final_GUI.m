@@ -1,6 +1,7 @@
 function ball_motor_gui(arduino)
 
     Timerupdate = 0.2;
+    TimeWindow = 20; 
 
     hFig = figure('Position', [100, 100, 950, 750], 'Name', 'Ball and Motor Control', ...
                   'MenuBar', 'none', 'NumberTitle', 'off', 'Resize', 'off');
@@ -99,7 +100,7 @@ function ball_motor_gui(arduino)
 
     function stopCallback(~, ~)
         writeline(handles.arduino, "Stop");
-        handles.arduino.flush();
+        flush(handles.arduino);
         handles = guidata(hFig);
         handles.isRunning = false;
         stop(handles.t);
@@ -145,7 +146,7 @@ function ball_motor_gui(arduino)
     function updateData(hFig, arduino)
         handles = guidata(hFig);
         while arduino.NumBytesAvailable > 0
-            [time, distance, voltage] = SingleRead(arduino);
+            [time, distance] = SingleRead(arduino);
             if isempty(handles.t_data)
                 handles.t_data = 0;
                 handles.ballHeightData = 0;
@@ -155,13 +156,33 @@ function ball_motor_gui(arduino)
                 handles.t_data(end+1) = time;
                 handles.ballHeightData(end+1) = distance;
                 handles.motorSpeedData(end+1) = 2000 + 500 * cos(handles.t_data(end));
-                handles.voltageData(end+1) = voltage;
+                handles.voltageData(end+1) = 5 + 2 * sin(handles.t_data(end));
+            end
+
+            if handles.t_data(end) > TimeWindow
+                validIndices = handles.t_data >= (handles.t_data(end) - TimeWindow);
+                handles.t_data = handles.t_data(validIndices);
+                handles.ballHeightData = handles.ballHeightData(validIndices);
+                handles.motorSpeedData = handles.motorSpeedData(validIndices);
+                handles.voltageData = handles.voltageData(validIndices);
             end
         end
+
         set(handles.refHeightPlot, 'XData', handles.t_data, 'YData', handles.refHeight * ones(size(handles.t_data)));
         set(handles.ballHeightPlot, 'XData', handles.t_data, 'YData', handles.ballHeightData);
         set(handles.motorSpeedPlot, 'XData', handles.t_data, 'YData', handles.motorSpeedData);
         set(handles.voltagePlot, 'XData', handles.t_data, 'YData', handles.voltageData);
+
+        if handles.t_data(end) > TimeWindow
+            xlim(ax1, [handles.t_data(end)-TimeWindow, handles.t_data(end)]);
+            xlim(ax2, [handles.t_data(end)-TimeWindow, handles.t_data(end)]);
+            xlim(ax3, [handles.t_data(end)-TimeWindow, handles.t_data(end)]);
+        else
+            xlim(ax1, [0, TimeWindow]);
+            xlim(ax2, [0, TimeWindow]);
+            xlim(ax3, [0, TimeWindow]);
+        end
+
         guidata(hFig, handles);
     end
 end
