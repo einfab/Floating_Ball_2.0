@@ -21,7 +21,7 @@ function ball_motor_gui(arduino)
     grid(ax2, 'on');
     hold(ax2, 'on');
     motorSpeedPlot = plot(ax2, NaN, NaN, 'g', 'LineWidth', 2);
-    ylim(ax2, [0, 10000]);
+    ylim(ax2, [0, 2000]);
     voltageText = uicontrol('Style', 'text', 'Position', [600, 160, 160, 30], 'String', 'Voltage: 0 V', 'FontSize', 12, 'BackgroundColor', 'white');
     uicontrol('Style', 'text', 'Position', [30, 220, 150, 20], 'String', 'Set Heigth (mm):', 'HorizontalAlignment', 'right', 'FontSize', 10);
     inputRefHeight = uicontrol('Style', 'edit', 'Position', [180, 220, 100, 20], 'String', '200', 'Callback', @updateRefHeight);
@@ -53,7 +53,7 @@ function ball_motor_gui(arduino)
     uicontrol('Style', 'pushbutton', 'String', 'Stop', 'Position', [180, 10, 100, 40], 'Callback', @stopCallback);
 
     function startCallback(~, ~)
-        writeline(handles.arduino, "Start");
+        writeline(handles.arduino, '100');
 
         handles = guidata(hFig);
         handles.isRunning = true;
@@ -105,7 +105,7 @@ function ball_motor_gui(arduino)
     function updateData(hFig, arduino)
         handles = guidata(hFig);
         while arduino.NumBytesAvailable > 0
-                [time, distance] = SingleRead(arduino);
+                [time, distance, mspeed] = SingleRead(arduino);
             if isempty(handles.t_data)
                 handles.t_data = 0;
                 handles.ballHeightData = 0;
@@ -113,7 +113,7 @@ function ball_motor_gui(arduino)
             else
                 handles.t_data(end+1) = time;
                 handles.ballHeightData(end+1) = distance/1000;
-                handles.motorSpeedData(end+1) = 2000 + 500 * cos(handles.t_data(end));
+                handles.motorSpeedData(end+1) = mspeed;
             end
             % maxPoints = 1000;
             % if length(handles.t_data) > maxPoints

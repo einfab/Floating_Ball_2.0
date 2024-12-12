@@ -6,7 +6,7 @@ if exist('baudRate', 'var') == 0
     clear
     PortAsString = serialportlist;
     PortAvailable = char(extractBetween(PortAsString, 1, 4));
-    baudRate = 115200;
+    baudRate = 19200;
     timeout = 10;
     arduino = serialport(PortAvailable, baudRate, 'Timeout', timeout);
     configureTerminator(arduino,59,"LF");

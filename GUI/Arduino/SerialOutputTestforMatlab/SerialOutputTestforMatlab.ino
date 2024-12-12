@@ -20,7 +20,7 @@ String state = "Start";
 
 void setup()
 {
-  Serial.begin(115200);
+  Serial.begin(9600);
   //---------------------------------------------------------------End of Enable Interrupt
   //Timer 1
   TCCR1A = 0x00;

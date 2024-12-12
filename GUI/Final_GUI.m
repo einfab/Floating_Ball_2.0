@@ -1,6 +1,6 @@
 function ball_motor_gui(arduino)
 
-    Timerupdate = 0.2;
+    Timerupdate = 0.5;
     TimeWindow = 20; 
 
     % Definition of the default parameters for the different controllers
@@ -34,7 +34,7 @@ function ball_motor_gui(arduino)
     grid(ax2, 'on');
     hold(ax2, 'on');
     motorSpeedPlot = plot(ax2, NaN, NaN, 'g', 'LineWidth', 2);
-    ylim(ax2, [0, 10000]);
+    ylim(ax2, [0, 1000]);
 
     % Plot for the voltage applied to the motor
     ax3 = axes('Parent', hFig, 'Position', [0.55, 0.06, 0.35, 0.4]);
@@ -49,7 +49,7 @@ function ball_motor_gui(arduino)
     % Text field for the set height
     uicontrol('Style', 'text', 'Position', [30, 300, 150, 20], 'String', 'Set height (mm):', ...
               'HorizontalAlignment', 'right', 'FontSize', 10);
-    inputRefHeight = uicontrol('Style', 'edit', 'Position', [180, 300, 100, 20], 'String', '200', ...
+    inputRefHeight = uicontrol('Style', 'edit', 'Position', [180, 300, 100, 20], 'String', '250', ...
                                'Callback', @updateRefHeight);
 
     % Drop down menu for the controller selection
@@ -124,7 +124,7 @@ function ball_motor_gui(arduino)
     handles.ballHeightData = [];
     handles.motorSpeedData = [];
     handles.voltageData = [];
-    handles.refHeight = 200;
+    handles.refHeight = 250;
     handles.P = 1.0;
     handles.I = 0.5;
     handles.D = 0.1;
@@ -132,7 +132,7 @@ function ball_motor_gui(arduino)
     guidata(hFig, handles);
 
     function startCallback(~, ~)
-        writeline(handles.arduino, "Start");
+        writeline(handles.arduino, num2str(handles.refHeight));
         handles = guidata(hFig);
         handles.isRunning = true;
         start(handles.t);
@@ -141,7 +141,7 @@ function ball_motor_gui(arduino)
     end
 
     function stopCallback(~, ~)
-        writeline(handles.arduino, "Stop");
+        writeline(handles.arduino, '0'); %Not to change anymore :)
         flush(handles.arduino);
         handles = guidata(hFig);
         handles.isRunning = false;
@@ -151,11 +151,14 @@ function ball_motor_gui(arduino)
     end
 
     function updateRefHeight(src, ~)
+        if handles.isRunning
+            writeline(handles.arduino, num2str(handles.refHeight));
+        end
         handles = guidata(hFig);
         refHeightMM = str2double(get(src, 'String'));
         if isnan(refHeightMM) || refHeightMM < 0 || refHeightMM > 500
-            refHeightMM = 200;
-            set(src, 'String', '200');
+            refHeightMM = 250;
+            set(src, 'String', '250');
         end
         guidata(hFig, handles);
     end
@@ -164,8 +167,8 @@ function ball_motor_gui(arduino)
         handles = guidata(hFig);
         refHeightMM = str2double(get(inputRefHeight, 'String'));
         if isnan(refHeightMM) || refHeightMM < 0 || refHeightMM > 500
-            refHeightMM = 200; % Standardwert, wenn die Eingabe ungültig ist
-            set(inputRefHeight, 'String', '200');
+            refHeightMM = 250; % Standardwert, wenn die Eingabe ungültig ist
+            set(inputRefHeight, 'String', '250');
         end
         handles.refHeight = refHeightMM; % Speichern des Referenzwertes
         guidata(hFig, handles);
@@ -212,7 +215,7 @@ function ball_motor_gui(arduino)
     function updateData(hFig, arduino)
         handles = guidata(hFig);
         while arduino.NumBytesAvailable > 0
-            [time, distance] = SingleRead(arduino);
+            [time, distance, mspeed, voltage] = SingleRead(arduino);
             if isempty(handles.t_data)
                 handles.t_data = 0;
                 handles.ballHeightData = 0;
@@ -221,8 +224,8 @@ function ball_motor_gui(arduino)
             else
                 handles.t_data(end+1) = time;
                 handles.ballHeightData(end+1) = distance;
-                handles.motorSpeedData(end+1) = 2000 + 500 * cos(handles.t_data(end));
-                handles.voltageData(end+1) = 5 + 2 * sin(handles.t_data(end));
+                handles.motorSpeedData(end+1) = mspeed;
+                handles.voltageData(end+1) = voltage;
             end
 
             if handles.t_data(end) > TimeWindow
