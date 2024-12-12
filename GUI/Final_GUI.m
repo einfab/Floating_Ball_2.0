@@ -9,7 +9,7 @@ function ball_motor_gui(arduino)
         'Control', struct('P', 2.0, 'I', 1.0, 'D', 0.2, 'n', 5), ...
         'CascadedControl', struct('P', 0.5, 'I', 0.2, 'D', 0.05, 'n', 2) ...
     );
-    currentRegulator = 'MotorControl';
+    currentRegulator = 'CascadedControl';
 
     % Create the GUI
     hFig = figure('Position', [0, 50, 1500, 750], 'Name', 'Ball and Motor Control', ...
@@ -62,7 +62,7 @@ function ball_motor_gui(arduino)
     uicontrol('Style', 'text', 'Position', [-50, 648, 200, 40], 'String', 'Select Controller:', ...
               'HorizontalAlignment', 'right', 'FontSize', 12);
     dropdown = uicontrol('Style', 'popupmenu', 'Position', [160, 650, 200, 40], ...
-                         'String', {'Motor Control', 'Control', 'Cascaded Control'}, ...
+                         'String', {'Cascaded Control', 'Motor Control', 'Control'}, ...
                           'FontSize', 12,'Callback', @updateRegulatorSelection);
     
     %Text field for the P value of the controller
@@ -107,24 +107,24 @@ function ball_motor_gui(arduino)
 
     % Start Button
     uicontrol('Style', 'pushbutton', 'String', 'Start', ...
-              'Position', [200, 170, 100, 40], 'Callback', @startCallback);
+              'Position', [300, 170, 100, 40], 'Callback', @startCallback);
     % Stop Button
     uicontrol('Style', 'pushbutton', 'String', 'Stop', ...
-              'Position', [200, 120, 100, 40], 'Callback', @stopCallback);
+              'Position', [300, 120, 100, 40], 'Callback', @stopCallback);
 
     % Set Button to apply the set height
     setButton = uicontrol('Style', 'pushbutton', 'String', 'Set', ...
-                      'Position', [290, 300, 50, 20], 'Callback', @applyRefHeight);
+                      'Position', [390, 300, 50, 20], 'Callback', @applyRefHeight);
 
     % Save Button
     handles.saveButton = uicontrol('Style', 'pushbutton', 'String', 'Save-data', ...
-                                   'Position', [320, 120, 100, 40], 'Callback', @saveData);
+                                   'Position', [450, 120, 100, 40], 'Callback', @saveData);
     % Save changes button to apply the controller settings
     handles.saveChanges = uicontrol('Style', 'pushbutton', 'String', 'Save-changes', ...
-                                   'Position', [200, 70, 100, 40], 'Callback', @updatePID);
+                                   'Position', [450, 70, 100, 40], 'Callback', @updatePID);
     % Build and deploy button
     handles.BuildProgram = uicontrol('Style', 'pushbutton', 'String', 'Build&Deploy', ...
-                                   'Position', [320, 70, 100, 40], 'Callback', @BuildProgram);
+                                   'Position', [300, 70, 100, 40], 'Callback', @BuildProgram);
 
     % Disable the save and save changes button
     set(handles.saveButton, 'Enable', 'off');
