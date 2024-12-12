@@ -1,12 +1,14 @@
 clc
 disp("Starting the Floating Ball...")
 
+
 if exist('baudRate', 'var') == 0
     clear
-    serialPort = 'COM3';
+    PortAsString = serialportlist;
+    PortAvailable = char(extractBetween(PortAsString, 1, 4));
     baudRate = 115200;
     timeout = 10;
-    arduino = serialport(serialPort, baudRate, 'Timeout', timeout);
+    arduino = serialport(PortAvailable, baudRate, 'Timeout', timeout);
     configureTerminator(arduino,59,"LF");
 end
 
