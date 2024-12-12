@@ -12,11 +12,11 @@ function ball_motor_gui(arduino)
     currentRegulator = 'MotorControl';
 
     % Create the GUI
-    hFig = figure('Position', [100, 100, 950, 750], 'Name', 'Ball and Motor Control', ...
+    hFig = figure('Position', [0, 50, 1500, 750], 'Name', 'Ball and Motor Control', ...
                   'MenuBar', 'none', 'NumberTitle', 'off', 'Resize', 'off');
     
     % Plot for the height of the ball
-    ax1 = axes('Parent', hFig, 'Position', [0.1, 0.55, 0.35, 0.4]);
+    ax1 = axes('Parent', hFig, 'Position', [0.50, 0.72, 0.45, 0.25]);
     xlabel(ax1, 'time in s');
     ylabel(ax1, 'height in mm');
     title(ax1, 'Height of the ball');
@@ -27,7 +27,7 @@ function ball_motor_gui(arduino)
     ylim(ax1, [0, 500]);
     
     % Plot for the rotations of the motor
-    ax2 = axes('Parent', hFig, 'Position', [0.55, 0.55, 0.35, 0.4]);
+    ax2 = axes('Parent', hFig, 'Position', [0.50, 0.39, 0.45, 0.25]);
     xlabel(ax2, 'time in s');
     ylabel(ax2, 'rotations per minute');
     title(ax2, 'Rotations');
@@ -37,7 +37,7 @@ function ball_motor_gui(arduino)
     ylim(ax2, [0, 10000]);
 
     % Plot for the voltage applied to the motor
-    ax3 = axes('Parent', hFig, 'Position', [0.55, 0.06, 0.35, 0.4]);
+    ax3 = axes('Parent', hFig, 'Position', [0.50, 0.06, 0.45, 0.25]);
     xlabel(ax3, 'time in s');
     ylabel(ax3, 'U in V');
     title(ax3, 'Motor voltage');
@@ -47,43 +47,61 @@ function ball_motor_gui(arduino)
     ylim(ax3, [0, 10]);
 
     % Text field for the set height
-    uicontrol('Style', 'text', 'Position', [30, 300, 150, 20], 'String', 'Set height (mm):', ...
+    rotation_text = uicontrol('Style', 'text', 'Position', [30, 300, 150, 20], 'String', 'Set rotations (rpm):', ...
+              'HorizontalAlignment', 'right', 'FontSize', 10);
+    inputRotation = uicontrol('Style', 'edit', 'Position', [180, 300, 100, 20], 'String', '200', ...
+                               'Callback', @updateRefHeight);
+
+    % Text field for the set height
+    refheight_text = uicontrol('Style', 'text', 'Position', [30, 300, 150, 20], 'String', 'Set height (mm):', ...
               'HorizontalAlignment', 'right', 'FontSize', 10);
     inputRefHeight = uicontrol('Style', 'edit', 'Position', [180, 300, 100, 20], 'String', '200', ...
                                'Callback', @updateRefHeight);
 
     % Drop down menu for the controller selection
-    uicontrol('Style', 'text', 'Position', [30, 340, 150, 20], 'String', 'Select Controller:', ...
-              'HorizontalAlignment', 'right', 'FontSize', 10);
-    dropdown = uicontrol('Style', 'popupmenu', 'Position', [180, 340, 150, 20], ...
+    uicontrol('Style', 'text', 'Position', [-50, 648, 200, 40], 'String', 'Select Controller:', ...
+              'HorizontalAlignment', 'right', 'FontSize', 12);
+    dropdown = uicontrol('Style', 'popupmenu', 'Position', [160, 650, 200, 40], ...
                          'String', {'Motor Control', 'Control', 'Cascaded Control'}, ...
-                         'Callback', @updateRegulatorSelection);
+                          'FontSize', 12,'Callback', @updateRegulatorSelection);
     
     %Text field for the P value of the controller
-    uicontrol('Style', 'text', 'Position', [10, 170, 50, 20], 'String', 'kP:', ...
+    kP_text = uicontrol('Style', 'text', 'Position', [10, 170, 50, 20], 'String', 'kP:', ...
               'HorizontalAlignment', 'right', 'FontSize', 10);
     inputP = uicontrol('Style', 'edit', 'Position', [70, 170, 100, 20], ...
                        'String', num2str(regulators.(currentRegulator).P), ...
                        'Callback', @updateRegulatorParameters);
+    inputP_out = uicontrol('Style', 'edit', 'Position', [170, 170, 100, 20], ...
+                       'String', num2str(regulators.(currentRegulator).P), ...
+                       'Callback', @updateRegulatorParameters);
 
     % Text field for the I value of the controller
-    uicontrol('Style', 'text', 'Position', [10, 140, 50, 20], 'String', 'kI:', ...
+    kI_text = uicontrol('Style', 'text', 'Position', [10, 140, 50, 20], 'String', 'kI:', ...
               'HorizontalAlignment', 'right', 'FontSize', 10);
     inputI = uicontrol('Style', 'edit', 'Position', [70, 140, 100, 20], ...
                        'String', num2str(regulators.(currentRegulator).I), ...
                        'Callback', @updateRegulatorParameters);
+    inputI_out = uicontrol('Style', 'edit', 'Position', [170, 140, 100, 20], ...
+                       'String', num2str(regulators.(currentRegulator).I), ...
+                       'Callback', @updateRegulatorParameters);
 
     % Text field for the D value of the controller
-    uicontrol('Style', 'text', 'Position', [10, 110, 50, 20], 'String', 'kD:', ...
+    kD_text = uicontrol('Style', 'text', 'Position', [10, 110, 50, 20], 'String', 'kD:', ...
               'HorizontalAlignment', 'right', 'FontSize', 10);
     inputD = uicontrol('Style', 'edit', 'Position', [70, 110, 100, 20], ...
                        'String', num2str(regulators.(currentRegulator).D), ...
                        'Callback', @updateRegulatorParameters);
+    inputD_out = uicontrol('Style', 'edit', 'Position', [170, 110, 100, 20], ...
+                       'String', num2str(regulators.(currentRegulator).D), ...
+                       'Callback', @updateRegulatorParameters);
 
     % Text field for the n value of the D part of the controller
-    uicontrol('Style', 'text', 'Position', [10, 80, 50, 20], 'String', 'n:', ...
+    n_text = uicontrol('Style', 'text', 'Position', [10, 80, 50, 20], 'String', 'n:', ...
               'HorizontalAlignment', 'right', 'FontSize', 10);
     inputn = uicontrol('Style', 'edit', 'Position', [70, 80, 100, 20], ...
+                       'String', num2str(regulators.(currentRegulator).n), ...
+                       'Callback', @updateRegulatorParameters);
+    inputn_out = uicontrol('Style', 'edit', 'Position', [170, 80, 100, 20], ...
                        'String', num2str(regulators.(currentRegulator).n), ...
                        'Callback', @updateRegulatorParameters);
 
@@ -139,7 +157,7 @@ function ball_motor_gui(arduino)
         set(handles.saveButton, 'Enable', 'off');
         guidata(hFig, handles);
     end
-
+    
     function stopCallback(~, ~)
         writeline(handles.arduino, "Stop");
         flush(handles.arduino);
@@ -175,7 +193,69 @@ function ball_motor_gui(arduino)
     function updateRegulatorSelection(src, ~)
         items = {'MotorControl', 'Control', 'CascadedControl'};
         currentRegulator = items{get(src, 'Value')};
+        a = items{get(src, 'Value')};
+        if strcmp(a, 'MotorControl')
+             set(kP_text, 'Visible', 'off');
+             set(inputP, 'Visible', 'off');
+             set(inputP_out, 'Visible', 'off');
+             set(kI_text, 'Visible', 'off');
+             set(inputI, 'Visible', 'off');
+             set(inputI_out, 'Visible', 'off');
+             set(kD_text, 'Visible', 'off');
+             set(inputD, 'Visible', 'off');
+             set(inputD_out, 'Visible', 'off');
+             set(n_text, 'Visible', 'off');
+             set(inputn, 'Visible', 'off');
+             set(inputn_out, 'Visible', 'off');
+             set(refheight_text, 'Visible', 'off');
+             set(inputRefHeight, 'Visible', 'off');
+             set(rotation_text, 'Visible', 'on');
+             set(inputRotation, 'Visible', 'on');             
+        elseif strcmp(a, 'Control')
+             set(kP_text, 'Visible', 'on');
+             set(inputP, 'Visible', 'on');
+             set(inputP_out, 'Visible', 'off');
+             set(kI_text, 'Visible', 'on');
+             set(inputI, 'Visible', 'on');
+             set(inputI_out, 'Visible', 'off');
+             set(kD_text, 'Visible', 'on');
+             set(inputD, 'Visible', 'on');
+             set(inputD_out, 'Visible', 'off');
+             set(n_text, 'Visible', 'on');
+             set(inputn, 'Visible', 'on');
+             set(inputn_out, 'Visible', 'off');
+             set(refheight_text, 'Visible', 'on');
+             set(inputRefHeight, 'Visible', 'on');
+             set(rotation_text, 'Visible', 'off');
+             set(inputRotation, 'Visible', 'off');  
+        else
+             set(kP_text, 'Visible', 'on');
+             set(inputP, 'Visible', 'on');
+             set(inputP_out, 'Visible', 'on');
+             set(kI_text, 'Visible', 'on');
+             set(inputI, 'Visible', 'on');
+             set(inputI_out, 'Visible', 'on');
+             set(kD_text, 'Visible', 'on');
+             set(inputD, 'Visible', 'on');
+             set(inputD_out, 'Visible', 'on');
+             set(n_text, 'Visible', 'on');
+             set(inputn, 'Visible', 'on');
+             set(inputn_out, 'Visible', 'on');
+             set(refheight_text, 'Visible', 'on');
+             set(inputRefHeight, 'Visible', 'on');
+             set(rotation_text, 'Visible', 'off');
+             set(inputRotation, 'Visible', 'off'); 
+        end
         updateParameterFields();
+
+    end
+
+    function updatePID(~, ~)
+        % Get the current values of P, I, D, and n
+        P_value = regulators.(currentRegulator).P;
+        I_value = regulators.(currentRegulator).I;
+        D_value = regulators.(currentRegulator).D;
+        n_value = regulators.(currentRegulator).n;
     end
 
     function updateParameterFields()
@@ -194,7 +274,7 @@ function ball_motor_gui(arduino)
     end
     
     function BuildProgram(~, ~)
-        rtwbuild('TU8_4_8')
+        rtwbuild('TU8_4_8') %Simulink name to compile in the arduino
     end
 
 
