@@ -76,7 +76,7 @@ function ball_motor_gui(arduino)
                        'Callback', @updateRegulatorParameters);
 
     % Text field for the I value of the controller
-    kI_text = uicontrol('Style', 'text', 'Position', [10, 140, 50, 20], 'String', 'kI:', ...
+    TI_text = uicontrol('Style', 'text', 'Position', [10, 140, 50, 20], 'String', 'TI:', ...
               'HorizontalAlignment', 'right', 'FontSize', 10);
     inputI = uicontrol('Style', 'edit', 'Position', [70, 140, 100, 20], ...
                        'String', num2str(regulators.(currentRegulator).I), ...
@@ -86,7 +86,7 @@ function ball_motor_gui(arduino)
                        'Callback', @updateRegulatorParameters);
 
     % Text field for the D value of the controller
-    kD_text = uicontrol('Style', 'text', 'Position', [10, 110, 50, 20], 'String', 'kD:', ...
+    TD_text = uicontrol('Style', 'text', 'Position', [10, 110, 50, 20], 'String', 'TD:', ...
               'HorizontalAlignment', 'right', 'FontSize', 10);
     inputD = uicontrol('Style', 'edit', 'Position', [70, 110, 100, 20], ...
                        'String', num2str(regulators.(currentRegulator).D), ...
@@ -123,8 +123,11 @@ function ball_motor_gui(arduino)
     handles.saveChanges = uicontrol('Style', 'pushbutton', 'String', 'Save-changes', ...
                                    'Position', [450, 70, 100, 40], 'Callback', @updatePID);
     % Build and deploy button
-    handles.BuildProgram = uicontrol('Style', 'pushbutton', 'String', 'Build&Deploy', ...
-                                   'Position', [300, 70, 100, 40], 'Callback', @BuildProgram);
+    Build_deploy = uicontrol('Style', 'pushbutton', 'String', 'Build&Deploy', ...
+                                   'Position', [300, 70, 100, 40],'Visible','off', 'Callback', @BuildProgram);
+    % Init button
+    Init = uicontrol('Style', 'pushbutton', 'String', 'Init', ...
+                                   'Position', [300, 70, 100, 40], 'Callback', @InitProgram);
 
     % Disable the save and save changes button
     set(handles.saveButton, 'Enable', 'off');
@@ -194,17 +197,16 @@ function ball_motor_gui(arduino)
 
 
     function updateRegulatorSelection(src, ~)
-        items = {'MotorControl', 'Control', 'CascadedControl'};
+        items = { 'CascadedControl','MotorControl', 'Control'};
         currentRegulator = items{get(src, 'Value')};
-        a = items{get(src, 'Value')};
-        if strcmp(a, 'MotorControl')
+        if strcmp(currentRegulator, 'MotorControl')
              set(kP_text, 'Visible', 'off');
              set(inputP, 'Visible', 'off');
              set(inputP_out, 'Visible', 'off');
-             set(kI_text, 'Visible', 'off');
+             set(TI_text, 'Visible', 'off');
              set(inputI, 'Visible', 'off');
              set(inputI_out, 'Visible', 'off');
-             set(kD_text, 'Visible', 'off');
+             set(TD_text, 'Visible', 'off');
              set(inputD, 'Visible', 'off');
              set(inputD_out, 'Visible', 'off');
              set(n_text, 'Visible', 'off');
@@ -214,14 +216,14 @@ function ball_motor_gui(arduino)
              set(inputRefHeight, 'Visible', 'off');
              set(rotation_text, 'Visible', 'on');
              set(inputRotation, 'Visible', 'on');             
-        elseif strcmp(a, 'Control')
+        elseif strcmp(currentRegulator, 'Control')
              set(kP_text, 'Visible', 'on');
              set(inputP, 'Visible', 'on');
              set(inputP_out, 'Visible', 'off');
-             set(kI_text, 'Visible', 'on');
+             set(TI_text, 'Visible', 'on');
              set(inputI, 'Visible', 'on');
              set(inputI_out, 'Visible', 'off');
-             set(kD_text, 'Visible', 'on');
+             set(TD_text, 'Visible', 'on');
              set(inputD, 'Visible', 'on');
              set(inputD_out, 'Visible', 'off');
              set(n_text, 'Visible', 'on');
@@ -235,10 +237,10 @@ function ball_motor_gui(arduino)
              set(kP_text, 'Visible', 'on');
              set(inputP, 'Visible', 'on');
              set(inputP_out, 'Visible', 'on');
-             set(kI_text, 'Visible', 'on');
+             set(TI_text, 'Visible', 'on');
              set(inputI, 'Visible', 'on');
              set(inputI_out, 'Visible', 'on');
-             set(kD_text, 'Visible', 'on');
+             set(TD_text, 'Visible', 'on');
              set(inputD, 'Visible', 'on');
              set(inputD_out, 'Visible', 'on');
              set(n_text, 'Visible', 'on');
@@ -277,9 +279,14 @@ function ball_motor_gui(arduino)
     end
     
     function BuildProgram(~, ~)
-        rtwbuild('TU8_4_8') %Simulink name to compile in the arduino
+        rtwbuild('FloatingBall') 
     end
 
+    function InitProgram(~, ~)
+        run('IoDeviceBuilder_Setup.m')
+        set(Build_deploy, 'Visible', 'on');
+        set(Init, 'Visible', 'off');
+     end
 
     function saveData(~, ~)
         handles = guidata(hFig);
