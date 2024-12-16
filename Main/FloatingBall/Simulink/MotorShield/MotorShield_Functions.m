@@ -160,7 +160,7 @@ classdef MotorShield_Functions < matlab.System ...
     end
 
     function updateBuildInfo(buildInfo, context)
-projectPath = 'C:\Users\fabia\MATLAB\Projects\Project_Floating_Ball\Main\FloatingBall';
+projectPath = 'C:\Users\garme\OneDrive\Documentos\GitHub\Floating_Ball_2.0\Floating_Ball_2.0';
       coder.extrinsic('codertarget.targethardware.getTargetHardware');
       hCS = coder.const(getActiveConfigSet(bdroot));
       targetInfo = coder.const(codertarget.targethardware.getTargetHardware(hCS));

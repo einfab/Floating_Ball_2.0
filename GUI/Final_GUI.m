@@ -283,7 +283,7 @@ function ball_motor_gui(arduino)
     end
 
     function InitProgram(~, ~)
-        run('IoDeviceBuilder_Setup.m')
+        IoDeviceBuilder_Setup();
         set(Build_deploy, 'Visible', 'on');
         set(Init, 'Visible', 'off');
      end

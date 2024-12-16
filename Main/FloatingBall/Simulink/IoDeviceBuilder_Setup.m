@@ -1,12 +1,13 @@
 % IoDeviceBuilderSetup
 % Startup Function to edit the Absolute Paths needed by the IoDeviceBuilder
-
+function IoDeviceBuilder_Setup
 TmpProject = matlab.project.rootProject;
 ProjectPath = TmpProject.RootFolder;
 clear TmpProject;
 
+
 %% VL53L1X_Function
-filePath = fullfile(ProjectPath,'Simulink', 'Sensor', 'VL53L1X_Function.m');
+filePath = fullfile(ProjectPath, 'Main', 'FloatingBall', 'Simulink', 'Sensor', 'VL53L1X_Function.m');
 
 lineNumber = 168;
 newLineContent = sprintf("projectPath = '%s';", ProjectPath); 
@@ -40,7 +41,7 @@ disp('VL53L1X_Function.m was changed successfully.');
 
 %% MotorShield_Functions
 
-filePath = fullfile(ProjectPath,'Simulink', 'MotorShield', 'MotorShield_Functions.m');
+filePath = fullfile(ProjectPath, 'Main', 'FloatingBall', 'Simulink', 'MotorShield', 'MotorShield_Functions.m');
 
 lineNumber = 163;
 newLineContent = sprintf("projectPath = '%s';", ProjectPath); 
@@ -75,3 +76,4 @@ disp('MotorShield_Functions.m was changed successfully.');
 clear fid fileLines filePath lineNumber newLineContent ProjectPath ans;
 
 disp('The IO Device Builder files were changed successfully.')
+end
