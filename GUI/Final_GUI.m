@@ -191,12 +191,12 @@ function ball_motor_gui(arduino)
     function startCallback(~, ~)
         %writeline(handles.arduino, num2str(handles.refHeight));
         %Controller Values are multiplied by 1000 to avoid using double (P,I,D)
-        % Serial_String = horzcat( ...
-        %     num2str(handles.P_motor_value*10),' ',num2str(handles.I_motor_value*10),' ',num2str(handles.D_motor_value*10),' ',num2str(handles.n_motor_value),' ', ...
-        %     num2str(handles.P_ctl_value*10),' ',num2str(handles.I_ctl_value*10),' ',num2str(handles.D_ctl_value*10),' ',num2str(handles.n_ctl_value),' ', ...
-        %     '0',' ',num2str(handles.set_mode),' ',num2str(handles.refHeight),' ','1')
-        % writeline(handles.arduino, Serial_String);
-        writeline(handles.arduino, "15 45 35 4 55 65 75 8 9 2 3 4");
+        Serial_String = horzcat( ...
+            num2str(handles.P_motor_value*10),' ',num2str(handles.I_motor_value*10),' ',num2str(handles.D_motor_value*10),' ',num2str(handles.n_motor_value),' ', ...
+            num2str(handles.P_ctl_value*10),' ',num2str(handles.I_ctl_value*10),' ',num2str(handles.D_ctl_value*10),' ',num2str(handles.n_ctl_value),' ', ...
+            '0',' ',num2str(handles.set_mode),' ',num2str(handles.refHeight),' ','1')
+        writeline(handles.arduino, Serial_String);
+        %writeline(handles.arduino, "15 45 35 4 55 65 75 8 9 2 3 4");
         handles = guidata(hFig);
         handles.isRunning = true;
         start(handles.t);
@@ -206,6 +206,11 @@ function ball_motor_gui(arduino)
     
     function stopCallback(~, ~)
         %writeline(handles.arduino, '0'); %Not to change anymore :)
+        Serial_String4 = horzcat( ...
+            num2str(handles.P_motor_value*10),' ',num2str(handles.I_motor_value*10),' ',num2str(handles.D_motor_value*10),' ',num2str(handles.n_motor_value),' ', ...
+            num2str(handles.P_ctl_value*10),' ',num2str(handles.I_ctl_value*10),' ',num2str(handles.D_ctl_value*10),' ',num2str(handles.n_ctl_value),' ', ...
+            '0',' ',num2str(handles.set_mode),' ',num2str(handles.refHeight),' ','0')
+        writeline(handles.arduino, Serial_String4);
         flush(handles.arduino);
         handles = guidata(hFig);
         handles.isRunning = false;
@@ -237,27 +242,33 @@ function ball_motor_gui(arduino)
         handles.refHeight = refHeightMM; % Speichern des Referenzwertes
         %writeline(handles.arduino, num2str(handles.refHeight));
              % Get the current values of P, I, D, and n
-            if strcmp(currentRegulator, 'CascadedControl')
-                handles.P_ctl_value = regulators.(currentRegulator).P;
-                handles.I_ctl_value = regulators.(currentRegulator).I;
-                handles.D_ctl_value = regulators.(currentRegulator).D;
-                handles.n_ctl_value = regulators.(currentRegulator).n;
-                handles.set_mode = 0; % TODO: Maybe order still needs to be changed
-            elseif strcmp(currentRegulator, 'Control')
-                handles.P_motor_value = regulators.(currentRegulator).P;
-                handles.I_motor_value = regulators.(currentRegulator).I;
-                handles.D_motor_value = regulators.(currentRegulator).D;
-                handles.n_motor_value = regulators.(currentRegulator).n;
-                handles.set_mode = 1; % TODO: Maybe order still needs to be changed
-            else
-                handles.set_mode = 2; % TODO: Maybe order still needs to be changed
-            end
+        if strcmp(currentRegulator, 'CascadedControl')
+            handles.P_ctl_value = regulators.(currentRegulator).Outer.P;
+            handles.I_ctl_value = regulators.(currentRegulator).Outer.I;
+            handles.D_ctl_value = regulators.(currentRegulator).Outer.D;
+            handles.n_ctl_value = regulators.(currentRegulator).Outer.n;
+
+            handles.P_motor_value = regulators.(currentRegulator).Inner.P;
+            handles.I_motor_value = regulators.(currentRegulator).Inner.I;
+            handles.D_motor_value = regulators.(currentRegulator).Inner.D;
+            handles.n_motor_value = regulators.(currentRegulator).Inner.n;
+            
+            handles.set_mode = 0; % TODO: Maybe order still needs to be changed
+        elseif strcmp(currentRegulator, 'PIDControl')
+            handles.P_motor_value = regulators.(currentRegulator).P;
+            handles.I_motor_value = regulators.(currentRegulator).I;
+            handles.D_motor_value = regulators.(currentRegulator).D;
+            handles.n_motor_value = regulators.(currentRegulator).n;
+            handles.set_mode = 1; % TODO: Maybe order still needs to be changed
+        else
+            handles.set_mode = 2; % TODO: Maybe order still needs to be changed
+        end
             %writeline(handles.arduino, "15 45 35 4 55 65 75 8 9 5 6 7");
-            Serial_String3 = horzcat( ...
+            Serial_String2 = horzcat( ...
                 num2str(handles.P_motor_value*10),' ',num2str(handles.I_motor_value*10),' ',num2str(handles.D_motor_value*10),' ',num2str(handles.n_motor_value),' ', ...
                 num2str(handles.P_ctl_value*10),' ',num2str(handles.I_ctl_value*10),' ',num2str(handles.D_ctl_value*10),' ',num2str(handles.n_ctl_value),' ', ...
                 '0',' ',num2str(handles.set_mode),' ',num2str(handles.refHeight),' ','1')
-            writeline(handles.arduino, Serial_String3);
+            writeline(handles.arduino, Serial_String2);
         guidata(hFig, handles);
     end
 
@@ -371,6 +382,11 @@ function ball_motor_gui(arduino)
         else
             handles.set_mode = 2; % TODO: Maybe order still needs to be changed
         end
+        Serial_String3 = horzcat( ...
+            num2str(handles.P_motor_value*10),' ',num2str(handles.I_motor_value*10),' ',num2str(handles.D_motor_value*10),' ',num2str(handles.n_motor_value),' ', ...
+            num2str(handles.P_ctl_value*10),' ',num2str(handles.I_ctl_value*10),' ',num2str(handles.D_ctl_value*10),' ',num2str(handles.n_ctl_value),' ', ...
+            '0',' ',num2str(handles.set_mode),' ',num2str(handles.refHeight),' ','1')
+        writeline(handles.arduino, Serial_String3);
 
     end
 
