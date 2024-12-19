@@ -165,7 +165,7 @@ classdef VL53L1X_Function < matlab.System ...
     end
 
     function updateBuildInfo(buildInfo, context)
-projectPath = 'C:\Users\garme\OneDrive\Documentos\GitHub\Floating_Ball_2.0\Floating_Ball_2.0';
+projectPath = 'C:\Users\Johannes Sutter\Documents\Floating_Ball_2_0';
       coder.extrinsic('codertarget.targethardware.getTargetHardware');
       hCS = coder.const(getActiveConfigSet(bdroot));
       targetInfo = coder.const(codertarget.targethardware.getTargetHardware(hCS));
