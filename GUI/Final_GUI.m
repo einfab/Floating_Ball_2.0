@@ -5,11 +5,14 @@ function ball_motor_gui(arduino)
 
     % Definition of the default parameters for the different controllers
     regulators = struct( ...
-        'MotorControl', struct('P', 1.0, 'I', 0.5, 'D', 0.1, 'n', 1), ...
-        'Control', struct('P', 2.0, 'I', 1.0, 'D', 0.2, 'n', 5), ...
-        'CascadedControl', struct('P', 0.5, 'I', 0.2, 'D', 0.05, 'n', 2) ...
+        'PIDControl', struct('P', 2.0, 'I', 1.0, 'D', 0.2, 'n', 5), ...
+        'CascadedControl', struct( ...
+        'Outer', struct('P', 0.5, 'I', 0.2, 'D', 0.05, 'n', 2), ... % Äußerer Regler
+        'Inner', struct('P', 1.0, 'I', 0.5, 'D', 0.1, 'n', 1) ...   % Innerer Regler
+        ) ...
     );
-    currentRegulator = 'CascadedControl';
+
+    currentRegulator = 'PIDControl';
 
     % Create the GUI
     hFig = figure('Position', [0, 50, 1500, 750], 'Name', 'Ball and Motor Control', ...
@@ -62,7 +65,7 @@ function ball_motor_gui(arduino)
     uicontrol('Style', 'text', 'Position', [-50, 648, 200, 40], 'String', 'Select Controller:', ...
               'HorizontalAlignment', 'right', 'FontSize', 12);
     dropdown = uicontrol('Style', 'popupmenu', 'Position', [160, 650, 200, 40], ...
-                         'String', {'Cascaded Control', 'Motor Control', 'Control'}, ...
+                         'String', {'MotorControl', 'PIDControl', 'CascadedControl'}, ...
                           'FontSize', 12,'Callback', @updateRegulatorSelection);
     
     %Text field for the P value of the controller
@@ -104,6 +107,26 @@ function ball_motor_gui(arduino)
     inputn_out = uicontrol('Style', 'edit', 'Position', [170, 80, 100, 20], ...
                        'String', num2str(regulators.(currentRegulator).n), ...
                        'Callback', @updateRegulatorParameters);
+
+    % Text field for Height Control in the cascaded controller
+    HeightControl_text = uicontrol('Style', 'text', 'Position', [155, 190, 100, 20], ...
+              'String', 'Height Control', 'HorizontalAlignment', 'right');
+
+    % Text field for Motor Control in the cascaded controller
+    MotorControl_text = uicontrol('Style', 'text', 'Position', [55, 190, 100, 20], ...
+              'String', 'Motor Control', 'HorizontalAlignment', 'right');
+
+    % Checkbox for the height control in the cascaded controller
+    HeightControl = uicontrol('Style', 'checkbox', ...
+                   'Position', [210, 210, 50, 30], ...
+                   'Callback', @HeightControlCallback);
+    
+    % Checkbox for the motor control in the cascaded controller
+    MotorControl = uicontrol('Style', 'checkbox', ...
+                   'Position', [115, 210, 50, 30], ...
+                   'Callback', @MotorControlCallback);
+
+
 
     % Start Button
     uicontrol('Style', 'pushbutton', 'String', 'Start', ...
@@ -197,7 +220,7 @@ function ball_motor_gui(arduino)
 
 
     function updateRegulatorSelection(src, ~)
-        items = { 'CascadedControl','MotorControl', 'Control'};
+        items = { 'MotorControl','PIDControl', 'CascadedControl'};
         currentRegulator = items{get(src, 'Value')};
         if strcmp(currentRegulator, 'MotorControl')
              set(kP_text, 'Visible', 'off');
@@ -215,24 +238,36 @@ function ball_motor_gui(arduino)
              set(refheight_text, 'Visible', 'off');
              set(inputRefHeight, 'Visible', 'off');
              set(rotation_text, 'Visible', 'on');
-             set(inputRotation, 'Visible', 'on');             
-        elseif strcmp(currentRegulator, 'Control')
+             set(inputRotation, 'Visible', 'on'); 
+             HeightControl.Visible = 'off';
+             MotorControl.Visible =  'off';
+             HeightControl_text.Visible = 'off';
+             MotorControl_text.Visible = 'off';
+        elseif strcmp(currentRegulator, 'PIDControl')
              set(kP_text, 'Visible', 'on');
              set(inputP, 'Visible', 'on');
+             set(inputP, 'Enable', 'on');
              set(inputP_out, 'Visible', 'off');
              set(TI_text, 'Visible', 'on');
              set(inputI, 'Visible', 'on');
+             set(inputI, 'Enable', 'on');
              set(inputI_out, 'Visible', 'off');
              set(TD_text, 'Visible', 'on');
              set(inputD, 'Visible', 'on');
+             set(inputD, 'Enable', 'on');
              set(inputD_out, 'Visible', 'off');
              set(n_text, 'Visible', 'on');
              set(inputn, 'Visible', 'on');
+             set(inputn, 'Enable', 'on');
              set(inputn_out, 'Visible', 'off');
              set(refheight_text, 'Visible', 'on');
              set(inputRefHeight, 'Visible', 'on');
              set(rotation_text, 'Visible', 'off');
-             set(inputRotation, 'Visible', 'off');  
+             set(inputRotation, 'Visible', 'off'); 
+             HeightControl.Visible = 'off';
+             MotorControl.Visible =  'off';
+             HeightControl_text.Visible = 'off';
+             MotorControl_text.Visible = 'off';
         else
              set(kP_text, 'Visible', 'on');
              set(inputP, 'Visible', 'on');
@@ -250,25 +285,68 @@ function ball_motor_gui(arduino)
              set(inputRefHeight, 'Visible', 'on');
              set(rotation_text, 'Visible', 'off');
              set(inputRotation, 'Visible', 'off'); 
+             HeightControl.Visible = 'on';
+             MotorControl.Visible =  'on';
+             HeightControl_text.Visible = 'on';
+             MotorControl_text.Visible = 'on';
+
+             inputP.Enable = 'off';
+             inputI.Enable = 'off';
+             inputD.Enable = 'off';
+             inputn.Enable = 'off';
+             inputP_out.Enable = 'off';
+             inputI_out.Enable = 'off';
+             inputD_out.Enable = 'off';
+             inputn_out.Enable = 'off';
+             MotorControl.Value = 0;
+             HeightControl.Value = 0;
         end
         updateParameterFields();
 
     end
 
     function updatePID(~, ~)
+        if(strcmp(currentRegulator, 'PIDControl'))
         % Get the current values of P, I, D, and n
         P_value = regulators.(currentRegulator).P;
         I_value = regulators.(currentRegulator).I;
         D_value = regulators.(currentRegulator).D;
         n_value = regulators.(currentRegulator).n;
+        end
+
+        if(strcmp(currentRegulator, 'CascadedControl'))
+        P_value = regulators.(currentRegulator).Inner.P;
+        I_value = regulators.(currentRegulator).Inner.I;
+        D_value = regulators.(currentRegulator).Inner.D;
+        n_value = regulators.(currentRegulator).Inner.n;
+
+        P_out_value = regulators.(currentRegulator).Outer.P;
+        I_out_value = regulators.(currentRegulator).Outer.I;
+        D_out_value = regulators.(currentRegulator).Outer.D;
+        n_out_value = regulators.(currentRegulator).Outer.n;
+        end
     end
 
     function updateParameterFields()
             % Aktualisiere die Werte in den Eingabefeldern basierend auf dem ausgewählten Regler
+            if(strcmp(currentRegulator, 'PIDControl'))
             set(inputP, 'String', num2str(regulators.(currentRegulator).P));
             set(inputI, 'String', num2str(regulators.(currentRegulator).I));
             set(inputD, 'String', num2str(regulators.(currentRegulator).D));
             set(inputn, 'String', num2str(regulators.(currentRegulator).n));
+            end
+
+            if(strcmp(currentRegulator, 'CascadedControl'))
+            set(inputP, 'String', num2str(regulators.(currentRegulator).Inner.P));
+            set(inputI, 'String', num2str(regulators.(currentRegulator).Inner.I));
+            set(inputD, 'String', num2str(regulators.(currentRegulator).Inner.D));
+            set(inputn, 'String', num2str(regulators.(currentRegulator).Inner.n));
+
+            set(inputP_out, 'String', num2str(regulators.(currentRegulator).Outer.P));
+            set(inputI_out, 'String', num2str(regulators.(currentRegulator).Outer.I));
+            set(inputD_out, 'String', num2str(regulators.(currentRegulator).Outer.D));
+            set(inputn_out, 'String', num2str(regulators.(currentRegulator).Outer.n));
+            end
         end
 
     function updateRegulatorParameters(~, ~)
@@ -296,6 +374,48 @@ function ball_motor_gui(arduino)
                          'VariableNames', {'time in s', 'Height in mm', 'rotations per minute', 'Voltage (V)'});
             writetable(data, fullfile(path, file), 'Delimiter', '\t');
             disp('Data saved successfully');
+        end
+    end
+
+    % Callback-Funktion für Height Control
+    function HeightControlCallback(src, ~)
+        if src.Value == 1 
+            MotorControl.Value = 0;
+            inputP.Enable = 'off';
+            inputI.Enable = 'off';
+            inputD.Enable = 'off';
+            inputn.Enable = 'off';
+
+            inputP_out.Enable = 'on';
+            inputI_out.Enable = 'on';
+            inputD_out.Enable = 'on';
+            inputn_out.Enable = 'on';
+
+            inputRotation.Visible = 'off';
+            rotation_text.Visible = 'off';
+            inputRefHeight.Visible = 'on';
+            refheight_text.Visible = 'on';
+        end
+    end
+
+    % Callback-Funktion für Motor Control
+    function MotorControlCallback(src, ~)
+        if src.Value == 1 
+            HeightControl.Value = 0; 
+            inputP.Enable = 'on';
+            inputI.Enable = 'on';
+            inputD.Enable = 'on';
+            inputn.Enable = 'on';
+
+            inputP_out.Enable = 'off';
+            inputI_out.Enable = 'off';
+            inputD_out.Enable = 'off';
+            inputn_out.Enable = 'off';
+
+            inputRotation.Visible = 'on';
+            rotation_text.Visible = 'on';
+            inputRefHeight.Visible = 'off';
+            refheight_text.Visible = 'off';
         end
     end
 
