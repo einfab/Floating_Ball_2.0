@@ -126,8 +126,6 @@ function ball_motor_gui(arduino)
                    'Position', [115, 210, 50, 30], ...
                    'Callback', @MotorControlCallback);
 
-
-
     % Start Button
     uicontrol('Style', 'pushbutton', 'String', 'Start', ...
               'Position', [300, 170, 100, 40], 'Callback', @startCallback);
@@ -154,7 +152,6 @@ function ball_motor_gui(arduino)
 
     % Disable the save and save changes button
     set(handles.saveButton, 'Enable', 'off');
-    set(handles.saveChanges, 'Enable', 'off');
 
     handles.t = timer('ExecutionMode', 'fixedRate', 'Period', Timerupdate, ...
                       'TimerFcn', @(~, ~) updateData(hFig, arduino));
@@ -308,22 +305,22 @@ function ball_motor_gui(arduino)
     function updatePID(~, ~)
         if(strcmp(currentRegulator, 'PIDControl'))
         % Get the current values of P, I, D, and n
-        P_value = regulators.(currentRegulator).P;
-        I_value = regulators.(currentRegulator).I;
-        D_value = regulators.(currentRegulator).D;
-        n_value = regulators.(currentRegulator).n;
+        PIDControl.P = regulators.(currentRegulator).P;
+        PIDControl.I = regulators.(currentRegulator).I;
+        PIDControl.D = regulators.(currentRegulator).D;
+        PIDControl.n = regulators.(currentRegulator).n;
         end
 
         if(strcmp(currentRegulator, 'CascadedControl'))
-        P_value = regulators.(currentRegulator).Inner.P;
-        I_value = regulators.(currentRegulator).Inner.I;
-        D_value = regulators.(currentRegulator).Inner.D;
-        n_value = regulators.(currentRegulator).Inner.n;
+        CascadedControl.Inner.P = regulators.(currentRegulator).Inner.P;
+        CascadedControl.Inner.I = regulators.(currentRegulator).Inner.I;
+        CascadedControl.Inner.D = regulators.(currentRegulator).Inner.D;
+        CascadedControl.Inner.n = regulators.(currentRegulator).Inner.n;
 
-        P_out_value = regulators.(currentRegulator).Outer.P;
-        I_out_value = regulators.(currentRegulator).Outer.I;
-        D_out_value = regulators.(currentRegulator).Outer.D;
-        n_out_value = regulators.(currentRegulator).Outer.n;
+        CascadedControl.Outer.P = regulators.(currentRegulator).Outer.P;
+        CascadedControl.Outer.I = regulators.(currentRegulator).Outer.I;
+        CascadedControl.Outer.D = regulators.(currentRegulator).Outer.D;
+        CascadedControl.Outer.n = regulators.(currentRegulator).Outer.n;
         end
     end
 
@@ -350,10 +347,24 @@ function ball_motor_gui(arduino)
         end
 
     function updateRegulatorParameters(~, ~)
-        regulators.(currentRegulator).P = str2double(get(inputP, 'String'));
-        regulators.(currentRegulator).I = str2double(get(inputI, 'String'));
-        regulators.(currentRegulator).D = str2double(get(inputD, 'String'));
-        regulators.(currentRegulator).n = str2double(get(inputn, 'String'));
+        if(strcmp(currentRegulator, 'PIDControl'))
+            regulators.(currentRegulator).P = str2double(get(inputP, 'String'));
+            regulators.(currentRegulator).I = str2double(get(inputI, 'String'));
+            regulators.(currentRegulator).D = str2double(get(inputD, 'String'));
+            regulators.(currentRegulator).n = str2double(get(inputn, 'String'));
+        end
+
+        if(strcmp(currentRegulator, 'CascadedControl'))
+            regulators.(currentRegulator).Inner.P = str2double(get(inputP, 'String'));
+            regulators.(currentRegulator).Inner.I = str2double(get(inputI, 'String'));
+            regulators.(currentRegulator).Inner.D = str2double(get(inputD, 'String'));
+            regulators.(currentRegulator).Inner.n = str2double(get(inputn, 'String'));
+
+            regulators.(currentRegulator).Outer.P = str2double(get(inputP_out, 'String'));
+            regulators.(currentRegulator).Outer.I = str2double(get(inputI_out, 'String'));
+            regulators.(currentRegulator).Outer.D = str2double(get(inputD_out, 'String'));
+            regulators.(currentRegulator).Outer.n = str2double(get(inputn_out, 'String'));
+        end
     end
     
     function BuildProgram(~, ~)
@@ -418,6 +429,7 @@ function ball_motor_gui(arduino)
             refheight_text.Visible = 'off';
         end
     end
+
 
     function updateData(hFig, arduino)
         handles = guidata(hFig);
