@@ -147,10 +147,8 @@ function ball_motor_gui(arduino)
                                    'Position', [450, 70, 100, 40], 'Callback', @updatePID);
     % Build and deploy button
     Build_deploy = uicontrol('Style', 'pushbutton', 'String', 'Build&Deploy', ...
-                                   'Position', [300, 70, 100, 40],'Visible','off', 'Callback', @BuildProgram);
-    % Init button
-    Init = uicontrol('Style', 'pushbutton', 'String', 'Init', ...
-                                   'Position', [300, 70, 100, 40], 'Callback', @InitProgram);
+                                   'Position', [300, 70, 100, 40],'Visible','on', 'Callback', @BuildProgram);
+  
 
     % Disable the save and save changes button
     set(handles.saveButton, 'Enable', 'off');
@@ -433,15 +431,43 @@ function ball_motor_gui(arduino)
         end
     end
     
-    function BuildProgram(~, ~)
-        rtwbuild('FloatingBall') 
-    end
 
-    function InitProgram(~, ~)
-        IoDeviceBuilder_Setup();
+    function BuildProgram(~, ~)
+        set(Build_deploy, 'Visible', 'off');
+        loadingImagePath = 'loading.jpg'; 
+        successImagePath = 'tick_green.jpg';
+    
+        buttonPosition = get(Build_deploy, 'Position');
+        parentFigure = get(Build_deploy, 'Parent');
+    
+        ax = axes('Parent', parentFigure, ...
+                  'Position', [buttonPosition(1)/parentFigure.Position(3), ...
+                               buttonPosition(2)/parentFigure.Position(4), ...
+                               buttonPosition(3)/parentFigure.Position(3), ...
+                               buttonPosition(4)/parentFigure.Position(4)]);
+        imshow(imread(loadingImagePath), 'Parent', ax);
+        axis off;
+        drawnow;
+        try
+            rtwbuild('FloatingBall');
+        catch ME
+            set(Build_deploy, 'Visible', 'on'); %if there is an error the Button will show up again before the green tick
+            delete(ax); 
+            rethrow(ME);
+        end
+
+        while strcmp(get_param('FloatingBall', 'SimulationStatus'), 'updating')
+            pause(0.1);
+        end
+    
+        imshow(imread(successImagePath), 'Parent', ax);
+        axis off;
+        drawnow;
+
+        pause(5);
+        delete(ax); 
         set(Build_deploy, 'Visible', 'on');
-        set(Init, 'Visible', 'off');
-     end
+    end
 
     function saveData(~, ~)
         handles = guidata(hFig);
