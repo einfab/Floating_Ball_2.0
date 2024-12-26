@@ -26,8 +26,8 @@ function ball_motor_gui(arduino)
     hold(ax1, 'on');
     ballHeightPlot = plot(ax1, NaN, NaN, 'b', 'LineWidth', 2);
     refHeightPlot = plot(ax1, NaN, NaN, 'r--', 'LineWidth', 2);
-    ylim(ax1, [0, 10]);
-    %ylim(ax1, [0, 500]);
+    %ylim(ax1, [0, 10]);
+    ylim(ax1, [0, 500]);
     
     % Plot for the rotations of the motor
     ax2 = axes('Parent', hFig, 'Position', [0.50, 0.39, 0.45, 0.25]);
@@ -37,8 +37,8 @@ function ball_motor_gui(arduino)
     grid(ax2, 'on');
     hold(ax2, 'on');
     motorSpeedPlot = plot(ax2, NaN, NaN, 'g', 'LineWidth', 2);
-    ylim(ax2, [0, 10]);
-    %ylim(ax2, [0, 1000]);
+    %ylim(ax2, [0, 10]);
+    ylim(ax2, [0, 1000]);
 
     % Plot for the voltage applied to the motor
     ax3 = axes('Parent', hFig, 'Position', [0.50, 0.06, 0.45, 0.25]);
@@ -48,7 +48,7 @@ function ball_motor_gui(arduino)
     grid(ax3, 'on');
     hold(ax3, 'on');
     voltagePlot = plot(ax3, NaN, NaN, 'm', 'LineWidth', 2);
-    ylim(ax3, [0, 10]);
+    ylim(ax3, [0, 12]);
     %ylim(ax3, [0, 10]);
 
     % Text field for the set height
@@ -178,7 +178,7 @@ function ball_motor_gui(arduino)
     handles.I_ctl_value = 2.5;
     handles.D_ctl_value = 3.3;
     handles.n_ctl_value = 10;
-    handles.set_mode = 0; % TODO: Maybe order still needs to be changed
+    handles.set_mode = 1; % TODO: Maybe order still needs to be changed
     handles.P_motor_value = 1.50;
     handles.I_motor_value = 2.50;
     handles.D_motor_value = 3.50;
@@ -251,15 +251,15 @@ function ball_motor_gui(arduino)
             handles.D_motor_value = regulators.(currentRegulator).Inner.D;
             handles.n_motor_value = regulators.(currentRegulator).Inner.n;
             
-            handles.set_mode = 0; % TODO: Maybe order still needs to be changed
+            handles.set_mode = 3; % TODO: Maybe order still needs to be changed
         elseif strcmp(currentRegulator, 'PIDControl')
             handles.P_motor_value = regulators.(currentRegulator).P;
             handles.I_motor_value = regulators.(currentRegulator).I;
             handles.D_motor_value = regulators.(currentRegulator).D;
             handles.n_motor_value = regulators.(currentRegulator).n;
-            handles.set_mode = 1; % TODO: Maybe order still needs to be changed
-        else
             handles.set_mode = 2; % TODO: Maybe order still needs to be changed
+        else
+            handles.set_mode = 1; % TODO: Maybe order still needs to be changed
         end
             %writeline(handles.arduino, "15 45 35 4 55 65 75 8 9 5 6 7");
             Serial_String2 = horzcat( ...
