@@ -3,6 +3,10 @@ function ball_motor_gui(arduino)
     Timerupdate = 0.1;
     TimeWindow = 20; 
 
+    originalBackgroundColor = [1, 1, 1]; 
+    modifiedBackgroundColor = [1, 0.8, 0.8]; 
+
+
     % Definition of the default parameters for the different controllers
     regulators = struct( ...
         'PIDControl', struct('P', 2.0, 'I', 1.0, 'D', 0.2, 'n', 5), ...
@@ -69,7 +73,14 @@ function ball_motor_gui(arduino)
     dropdown = uicontrol('Style', 'popupmenu', 'Position', [160, 650, 200, 40], ...
                          'String', {'MotorControl', 'PIDControl', 'CascadedControl'}, ...
                           'FontSize', 12,'Callback', @updateRegulatorSelection);
-   
+    % Image of the controler
+    CascadeImage='Cascade.jpg';
+    MotorContolImage='Motor.jpg';
+    PIDContolImage='PID.jpg';
+    Controlerimage = axes('Parent', hFig, ...
+                 'Units', 'pixels', ...
+                 'Position', [90, 350, 400, 300]);
+
     %Text field for the P value of the controller
     kP_text = uicontrol('Style', 'text', 'Position', [10, 170, 50, 20], 'String', 'kP:', ...
               'HorizontalAlignment', 'right', 'FontSize', 10);
@@ -129,11 +140,11 @@ function ball_motor_gui(arduino)
                    'Callback', @MotorControlCallback);
 
     % Start Button
-    uicontrol('Style', 'pushbutton', 'String', 'Start', ...
+    startButton = uicontrol('Style', 'pushbutton', 'String', 'Start', ...
               'Position', [300, 170, 100, 40], 'Callback', @startCallback);
     % Stop Button
-    uicontrol('Style', 'pushbutton', 'String', 'Stop', ...
-              'Position', [300, 120, 100, 40], 'Callback', @stopCallback);
+    stopButton = uicontrol('Style', 'pushbutton', 'String', 'Stop', ...
+              'Position', [300, 120, 100, 40],'Enable','off', 'Callback', @stopCallback);
 
     % Set Button to apply the set height
     setButton = uicontrol('Style', 'pushbutton', 'String', 'Set', ...
@@ -184,6 +195,7 @@ function ball_motor_gui(arduino)
     handles.D_motor_value = 3.50;
     handles.n_motor_value = 4;
 
+    updateRegulatorSelection(dropdown, [])
 
 
     function startCallback(~, ~)
@@ -200,6 +212,8 @@ function ball_motor_gui(arduino)
         start(handles.t);
         set(handles.saveButton, 'Enable', 'off');
         guidata(hFig, handles);
+        set(stopButton, 'Enable', 'on');
+        set(startButton, 'Enable', 'off');
     end
     
     function stopCallback(~, ~)
@@ -215,6 +229,9 @@ function ball_motor_gui(arduino)
         stop(handles.t);
         set(handles.saveButton, 'Enable', 'on');
         guidata(hFig, handles);
+        set(stopButton, 'Enable', 'off');
+        set(startButton, 'Enable', 'on');
+
     end
 
     function updateRefHeight(src, ~)
@@ -228,9 +245,13 @@ function ball_motor_gui(arduino)
             set(src, 'String', '250');
         end
         guidata(hFig, handles);
+        set(inputRotation, 'BackgroundColor', modifiedBackgroundColor);
+        set(inputRefHeight, 'BackgroundColor', modifiedBackgroundColor);
     end
 
     function applyRefHeight(~, ~)
+        set(inputRotation, 'BackgroundColor', originalBackgroundColor);
+        set(inputRefHeight, 'BackgroundColor', originalBackgroundColor);
         handles = guidata(hFig);
         refHeightMM = str2double(get(inputRefHeight, 'String'));
         if isnan(refHeightMM) || refHeightMM < 0 || refHeightMM > 500
@@ -275,6 +296,8 @@ function ball_motor_gui(arduino)
         items = { 'MotorControl','PIDControl', 'CascadedControl'};
         currentRegulator = items{get(src, 'Value')};
         if strcmp(currentRegulator, 'MotorControl')
+             img = imread(MotorContolImage); 
+             imshow(img, 'Parent', Controlerimage);
              set(kP_text, 'Visible', 'off');
              set(inputP, 'Visible', 'off');
              set(inputP_out, 'Visible', 'off');
@@ -296,6 +319,8 @@ function ball_motor_gui(arduino)
              HeightControl_text.Visible = 'off';
              MotorControl_text.Visible = 'off';
         elseif strcmp(currentRegulator, 'PIDControl')
+             img = imread(PIDContolImage); 
+             imshow(img, 'Parent', Controlerimage);
              set(kP_text, 'Visible', 'on');
              set(inputP, 'Visible', 'on');
              set(inputP, 'Enable', 'on');
@@ -321,6 +346,8 @@ function ball_motor_gui(arduino)
              HeightControl_text.Visible = 'off';
              MotorControl_text.Visible = 'off';
         else
+             img = imread(CascadeImage); 
+             imshow(img, 'Parent', Controlerimage);
              set(kP_text, 'Visible', 'on');
              set(inputP, 'Visible', 'on');
              set(inputP_out, 'Visible', 'on');
@@ -478,6 +505,7 @@ function ball_motor_gui(arduino)
             writetable(data, fullfile(path, file), 'Delimiter', '\t');
             disp('Data saved successfully');
         end
+
     end
 
     % Callback-Funktion für Height Control
