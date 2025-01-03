@@ -11,10 +11,19 @@ function ball_motor_gui(arduino)
     regulators = struct( ...
         'PIDControl', struct('P', 2.0, 'I', 1.0, 'D', 0.2, 'n', 5), ...
         'CascadedControl', struct( ...
-        'Outer', struct('P', 0.5, 'I', 0.2, 'D', 0.05, 'n', 2), ... % Äußerer Regler
-        'Inner', struct('P', 1.0, 'I', 0.5, 'D', 0.1, 'n', 1) ...   % Innerer Regler
+        'Outer', struct('P', 0.5, 'I', 0.2, 'D', 0.05, 'n', 2), ... 
+        'Inner', struct('P', 1.0, 'I', 0.5, 'D', 0.1, 'n', 1) ...   
         ) ...
     );
+
+    previousValues = struct(...
+        'PIDControl', struct ('P', 2.0, 'I', 1.0, 'D', 0.2, 'n', 5), ...
+        'CascadedControl', struct( ...
+        'Outer', struct('P', 0.5, 'I', 0.2, 'D', 0.05, 'n', 2), ...
+        'Inner', struct('P', 1.0, 'I', 0.5, 'D', 0.1, 'n', 1) ...
+        ) ...
+    );
+
     currentRegulator = 'PIDControl';
 
     % Create the GUI
@@ -30,7 +39,6 @@ function ball_motor_gui(arduino)
     hold(ax1, 'on');
     ballHeightPlot = plot(ax1, NaN, NaN, 'b', 'LineWidth', 2);
     refHeightPlot = plot(ax1, NaN, NaN, 'r--', 'LineWidth', 2);
-    %ylim(ax1, [0, 10]);
     ylim(ax1, [0, 500]);
     
     % Plot for the rotations of the motor
@@ -41,7 +49,6 @@ function ball_motor_gui(arduino)
     grid(ax2, 'on');
     hold(ax2, 'on');
     motorSpeedPlot = plot(ax2, NaN, NaN, 'g', 'LineWidth', 2);
-    %ylim(ax2, [0, 10]);
     ylim(ax2, [0, 1000]);
 
     % Plot for the voltage applied to the motor
@@ -53,7 +60,6 @@ function ball_motor_gui(arduino)
     hold(ax3, 'on');
     voltagePlot = plot(ax3, NaN, NaN, 'm', 'LineWidth', 2);
     ylim(ax3, [0, 12]);
-    %ylim(ax3, [0, 10]);
 
     % Text field for the set height
     rotation_text = uicontrol('Style', 'text', 'Position', [30, 300, 150, 20], 'String', 'Set rotations (rpm):', ...
@@ -86,9 +92,11 @@ function ball_motor_gui(arduino)
               'HorizontalAlignment', 'right', 'FontSize', 10);
     inputP = uicontrol('Style', 'edit', 'Position', [70, 170, 100, 20], ...
                        'String', num2str(regulators.(currentRegulator).P), ...
+                       'Tag', 'P', ...
                        'Callback', @updateRegulatorParameters);
     inputP_out = uicontrol('Style', 'edit', 'Position', [170, 170, 100, 20], ...
                        'String', num2str(regulators.(currentRegulator).P), ...
+                       'Tag', 'OuterP', ...
                        'Callback', @updateRegulatorParameters);
 
     % Text field for the I value of the controller
@@ -96,9 +104,11 @@ function ball_motor_gui(arduino)
               'HorizontalAlignment', 'right', 'FontSize', 10);
     inputI = uicontrol('Style', 'edit', 'Position', [70, 140, 100, 20], ...
                        'String', num2str(regulators.(currentRegulator).I), ...
+                       'Tag', 'I', ...
                        'Callback', @updateRegulatorParameters);
     inputI_out = uicontrol('Style', 'edit', 'Position', [170, 140, 100, 20], ...
                        'String', num2str(regulators.(currentRegulator).I), ...
+                       'Tag', 'OuterI', ...
                        'Callback', @updateRegulatorParameters);
 
     % Text field for the D value of the controller
@@ -106,9 +116,11 @@ function ball_motor_gui(arduino)
               'HorizontalAlignment', 'right', 'FontSize', 10);
     inputD = uicontrol('Style', 'edit', 'Position', [70, 110, 100, 20], ...
                        'String', num2str(regulators.(currentRegulator).D), ...
+                       'Tag', 'D', ...
                        'Callback', @updateRegulatorParameters);
     inputD_out = uicontrol('Style', 'edit', 'Position', [170, 110, 100, 20], ...
                        'String', num2str(regulators.(currentRegulator).D), ...
+                       'Tag', 'OuterD', ...
                        'Callback', @updateRegulatorParameters);
 
     % Text field for the n value of the D part of the controller
@@ -116,9 +128,11 @@ function ball_motor_gui(arduino)
               'HorizontalAlignment', 'right', 'FontSize', 10);
     inputn = uicontrol('Style', 'edit', 'Position', [70, 80, 100, 20], ...
                        'String', num2str(regulators.(currentRegulator).n), ...
+                       'Tag', 'n', ...
                        'Callback', @updateRegulatorParameters);
     inputn_out = uicontrol('Style', 'edit', 'Position', [170, 80, 100, 20], ...
                        'String', num2str(regulators.(currentRegulator).n), ...
+                       'Tag', 'Outern', ...
                        'Callback', @updateRegulatorParameters);
 
     % Text field for Height Control in the cascaded controller
@@ -255,10 +269,10 @@ function ball_motor_gui(arduino)
         handles = guidata(hFig);
         refHeightMM = str2double(get(inputRefHeight, 'String'));
         if isnan(refHeightMM) || refHeightMM < 0 || refHeightMM > 500
-            refHeightMM = 250; % Standardwert, wenn die Eingabe ungültig ist
+            refHeightMM = 250;
             set(inputRefHeight, 'String', '250');
         end
-        handles.refHeight = refHeightMM; % Speichern des Referenzwertes
+        handles.refHeight = refHeightMM; 
         %writeline(handles.arduino, num2str(handles.refHeight));
              % Get the current values of P, I, D, and n
         if strcmp(currentRegulator, 'CascadedControl')
@@ -407,16 +421,32 @@ function ball_motor_gui(arduino)
         else
             handles.set_mode = 2; % TODO: Maybe order still needs to be changed
         end
+
+        if strcmp(currentRegulator, 'PIDControl')
+            previousValues.PIDControl = regulators.PIDControl;
+        elseif strcmp(currentRegulator, 'CascadedControl')
+            previousValues.CascadedControl = regulators.CascadedControl;
+        end
+        
+        inputFields = [inputP, inputI, inputD, inputn];  
+    
+        if strcmp(currentRegulator, 'CascadedControl')
+            inputFields = [inputFields, inputP_out, inputI_out, inputD_out, inputn_out];
+        end
+
+        for i = 1:length(inputFields)
+            set(inputFields(i), 'BackgroundColor', originalBackgroundColor);  
+        end
+       
         Serial_String3 = horzcat( ...
             num2str(handles.P_motor_value*10),' ',num2str(handles.I_motor_value*10),' ',num2str(handles.D_motor_value*10),' ',num2str(handles.n_motor_value),' ', ...
             num2str(handles.P_ctl_value*10),' ',num2str(handles.I_ctl_value*10),' ',num2str(handles.D_ctl_value*10),' ',num2str(handles.n_ctl_value),' ', ...
             '0',' ',num2str(handles.set_mode),' ',num2str(handles.refHeight),' ','1')
-        writeline(handles.arduino, Serial_String3);
+        writeline(handles.arduino, Serial_String3)
 
     end
 
     function updateParameterFields()
-            % Aktualisiere die Werte in den Eingabefeldern basierend auf dem ausgewählten Regler
             if(strcmp(currentRegulator, 'PIDControl'))
             set(inputP, 'String', num2str(regulators.(currentRegulator).P));
             set(inputI, 'String', num2str(regulators.(currentRegulator).I));
@@ -435,9 +465,9 @@ function ball_motor_gui(arduino)
             set(inputD_out, 'String', num2str(regulators.(currentRegulator).Outer.D));
             set(inputn_out, 'String', num2str(regulators.(currentRegulator).Outer.n));
             end
-        end
+    end
 
-    function updateRegulatorParameters(~, ~)
+    function updateRegulatorParameters(src, ~)
         if(strcmp(currentRegulator, 'PIDControl'))
             regulators.(currentRegulator).P = str2double(get(inputP, 'String'));
             regulators.(currentRegulator).I = str2double(get(inputI, 'String'));
@@ -456,7 +486,29 @@ function ball_motor_gui(arduino)
             regulators.(currentRegulator).Outer.D = str2double(get(inputD_out, 'String'));
             regulators.(currentRegulator).Outer.n = str2double(get(inputn_out, 'String'));
         end
-    end
+
+        newValue = str2double(get(src, 'String'));
+    
+        fieldName = get(src, 'Tag');
+
+        if strcmp(currentRegulator, 'PIDControl')
+            originalValue = previousValues.PIDControl.(fieldName);
+        elseif strcmp(currentRegulator, 'CascadedControl')
+            if contains(fieldName, 'Outer') 
+                innerFieldName = erase(fieldName, 'Outer');
+                originalValue = previousValues.CascadedControl.Outer.(innerFieldName);
+            else 
+                innerFieldName = erase(fieldName, 'Inner');
+                originalValue = previousValues.CascadedControl.Inner.(innerFieldName);
+            end
+        end
+
+        if isnan(newValue) || newValue ~= originalValue
+            set(src, 'BackgroundColor', modifiedBackgroundColor);
+        else
+            set(src, 'BackgroundColor', originalBackgroundColor);
+        end
+        end
     
 
     function BuildProgram(~, ~)
