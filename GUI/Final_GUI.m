@@ -87,8 +87,7 @@ function ball_motor_gui(arduino)
     Controlerimage = axes('Parent', hFig, ...
                  'Units', 'pixels', ...
                  'Position', [90, 350, 400, 300]);
-    img = imread(MotorContolImage); 
-    imshow(img, 'Parent', Controlerimage);
+    
 
     %Text field for the P value of the controller
     kP_text = uicontrol('Style', 'text', 'Position', [10, 170, 50, 20], 'String', 'kP:', ...
@@ -177,6 +176,29 @@ function ball_motor_gui(arduino)
     Build_deploy = uicontrol('Style', 'pushbutton', 'String', 'Build&Deploy', ...
                                    'Position', [300, 70, 100, 40],'Visible','on', 'Callback', @BuildProgram);
   
+    %Init State for GUI: Direct Motor Control
+    img_init = imread(MotorContolImage); 
+    imshow(img_init, 'Parent', Controlerimage);
+    set(kP_text, 'Visible', 'off');
+    set(inputP, 'Visible', 'off');
+    set(inputP_out, 'Visible', 'off');
+    set(TI_text, 'Visible', 'off');
+    set(inputI, 'Visible', 'off');
+    set(inputI_out, 'Visible', 'off');
+    set(TD_text, 'Visible', 'off');
+    set(inputD, 'Visible', 'off');
+    set(inputD_out, 'Visible', 'off');
+    set(n_text, 'Visible', 'off');
+    set(inputn, 'Visible', 'off');
+    set(inputn_out, 'Visible', 'off');
+    set(refheight_text, 'Visible', 'off');
+    set(inputRefHeight, 'Visible', 'off');
+    set(rotation_text, 'Visible', 'on');
+    set(inputRotation, 'Visible', 'on'); 
+    HeightControl.Visible = 'off';
+    MotorControl.Visible =  'off';
+    HeightControl_text.Visible = 'off';
+    MotorControl_text.Visible = 'off';
 
     % Disable the save and save changes button
     set(handles.saveButton, 'Enable', 'off');
