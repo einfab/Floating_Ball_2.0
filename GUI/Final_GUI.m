@@ -86,7 +86,7 @@ function ball_motor_gui(arduino)
     PIDContolImage='PID.jpg';
     Controlerimage = axes('Parent', hFig, ...
                  'Units', 'pixels', ...
-                 'Position', [90, 350, 400, 300]);
+                 'Position', [20, 350, 665, 300]);
     
 
     %Text field for the P value of the controller
