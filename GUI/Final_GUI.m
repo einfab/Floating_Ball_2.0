@@ -1,6 +1,6 @@
 function ball_motor_gui(arduino)
 
-    Timerupdate = 0.1;
+    Timerupdate = 0.5;
     TimeWindow = 20; 
 
     originalBackgroundColor = [1, 1, 1]; 
@@ -221,31 +221,40 @@ function ball_motor_gui(arduino)
     handles.D = 0.1;
     handles.arduino = arduino;
     guidata(hFig, handles);
-
     
-
     handles.P_ctl_value = 1.0;
     handles.I_ctl_value = 2.5;
     handles.D_ctl_value = 3.3;
     handles.n_ctl_value = 10;
     handles.set_mode = 1; % TODO: Maybe order still needs to be changed
-    handles.P_motor_value = 1.50;
-    handles.I_motor_value = 2.50;
-    handles.D_motor_value = 3.50;
+    handles.P_motor_value = 1.5;
+    handles.I_motor_value = 2.5;
+    handles.D_motor_value = 3.5;
     handles.n_motor_value = 4;
+    handles.decimal = 100;
+    guidata(hFig, handles);
+    handles.start = 0;
+
+    handles.serial_string = horzcat( ...
+        num2str(handles.P_motor_value*handles.decimal),' ',num2str(handles.I_motor_value*handles.decimal),' ',num2str(handles.D_motor_value*handles.decimal),' ',num2str(handles.n_motor_value),' ', ...
+        num2str(handles.P_ctl_value*handles.decimal),' ',num2str(handles.I_ctl_value*handles.decimal),' ',num2str(handles.D_ctl_value*handles.decimal),' ',num2str(handles.n_ctl_value),' ', ...
+        '0',' ',num2str(handles.set_mode),' ',num2str(handles.refHeight),' ',num2str(handles.start))
 
     updateRegulatorSelection(dropdown, [])
+    guidata(hFig, handles);
 
 
     function startCallback(~, ~)
         %writeline(handles.arduino, num2str(handles.refHeight));
         %Controller Values are multiplied by 1000 to avoid using double (P,I,D)
         regulators.start = 1;
-        Serial_String = horzcat( ...
-            num2str(handles.P_motor_value*10),' ',num2str(handles.I_motor_value*10),' ',num2str(handles.D_motor_value*10),' ',num2str(handles.n_motor_value),' ', ...
-            num2str(handles.P_ctl_value*10),' ',num2str(handles.I_ctl_value*10),' ',num2str(handles.D_ctl_value*10),' ',num2str(handles.n_ctl_value),' ', ...
-            '0',' ',num2str(handles.set_mode),' ',num2str(handles.refHeight),' ','1')
-        writeline(handles.arduino, Serial_String);
+        handles.start = regulators.start;
+        handles.decimal
+        handles.serial_string = horzcat( ...
+            num2str(handles.P_motor_value*handles.decimal),' ',num2str(handles.I_motor_value*handles.decimal),' ',num2str(handles.D_motor_value*handles.decimal),' ',num2str(handles.n_motor_value),' ', ...
+            num2str(handles.P_ctl_value*handles.decimal),' ',num2str(handles.I_ctl_value*handles.decimal),' ',num2str(handles.D_ctl_value*handles.decimal),' ',num2str(handles.n_ctl_value),' ', ...
+            '0',' ',num2str(handles.set_mode),' ',num2str(handles.refHeight),' ',num2str(handles.start))
+        writeline(handles.arduino, handles.serial_string);
         %writeline(handles.arduino, "15 45 35 4 55 65 75 8 9 2 3 4");
         handles = guidata(hFig);
         handles.isRunning = true;
@@ -259,11 +268,12 @@ function ball_motor_gui(arduino)
     function stopCallback(~, ~)
         %writeline(handles.arduino, '0'); %Not to change anymore :)
         regulators.start = 0;
-        Serial_String4 = horzcat( ...
-            num2str(handles.P_motor_value*10),' ',num2str(handles.I_motor_value*10),' ',num2str(handles.D_motor_value*10),' ',num2str(handles.n_motor_value),' ', ...
-            num2str(handles.P_ctl_value*10),' ',num2str(handles.I_ctl_value*10),' ',num2str(handles.D_ctl_value*10),' ',num2str(handles.n_ctl_value),' ', ...
-            '0',' ',num2str(handles.set_mode),' ',num2str(handles.refHeight),' ','0')
-        writeline(handles.arduino, Serial_String4);
+        handles.start = regulators.start;
+        handles.serial_string = horzcat( ...
+            num2str(handles.P_motor_value*handles.decimal),' ',num2str(handles.I_motor_value*handles.decimal),' ',num2str(handles.D_motor_value*handles.decimal),' ',num2str(handles.n_motor_value),' ', ...
+            num2str(handles.P_ctl_value*handles.decimal),' ',num2str(handles.I_ctl_value*handles.decimal),' ',num2str(handles.D_ctl_value*handles.decimal),' ',num2str(handles.n_ctl_value),' ', ...
+            '0',' ',num2str(handles.set_mode),' ',num2str(handles.refHeight),' ',num2str(handles.start))
+        writeline(handles.arduino, handles.serial_string);
         flush(handles.arduino);
         handles = guidata(hFig);
         handles.isRunning = false;
@@ -280,9 +290,9 @@ function ball_motor_gui(arduino)
             %writeline(handles.arduino, num2str(handles.refHeight));
         end
         handles = guidata(hFig);
-        refHeightMM = str2double(get(src, 'String'));
-        if isnan(refHeightMM) || refHeightMM < 0 || refHeightMM > 500
-            refHeightMM = 250;
+        handles.refHeight = str2double(get(src, 'String'))
+        if isnan(handles.refHeight) || handles.refHeight < 0 || handles.refHeight > 500
+            handles.refHeight = 250;
             set(src, 'String', '250');
         end
         guidata(hFig, handles);
@@ -294,13 +304,8 @@ function ball_motor_gui(arduino)
         set(inputRotation, 'BackgroundColor', originalBackgroundColor);
         set(inputRefHeight, 'BackgroundColor', originalBackgroundColor);
         handles = guidata(hFig);
-        
-        refHeightMM = str2double(get(inputRefHeight, 'String'));
-        if isnan(refHeightMM) || refHeightMM < 0 || refHeightMM > 500
-            refHeightMM = 250;
-            set(inputRefHeight, 'String', '250');
-        end
-        handles.refHeight = refHeightMM; 
+
+        % handles.refHeight = refHeightMM; 
         handles.start = regulators.start;
         %writeline(handles.arduino, num2str(handles.refHeight));
              % Get the current values of P, I, D, and n
@@ -316,12 +321,14 @@ function ball_motor_gui(arduino)
             handles.n_motor_value = regulators.(currentRegulator).Inner.n;
             
             handles.set_mode = 3; % TODO: Maybe order still needs to be changed
+            handles.refHeight = str2double(get(inputRefHeight, 'String'))
         elseif strcmp(currentRegulator, 'PIDControl')
             handles.P_motor_value = regulators.(currentRegulator).P;
             handles.I_motor_value = regulators.(currentRegulator).I;
             handles.D_motor_value = regulators.(currentRegulator).D;
             handles.n_motor_value = regulators.(currentRegulator).n;
             handles.set_mode = 2; % TODO: Maybe order still needs to be changed
+            handles.refHeight = str2double(get(inputRefHeight, 'String'))
         else
             handles.set_mode = 1; % TODO: Maybe order still needs to be changed
 
@@ -335,13 +342,19 @@ function ball_motor_gui(arduino)
             handles.I_ctl_value = 0; 
             handles.D_ctl_value = 0; 
             handles.n_ctl_value = 0; 
+            handles.refHeight = str2double(get(inputRotation, 'String'))
         end
             %writeline(handles.arduino, "15 45 35 4 55 65 75 8 9 5 6 7");
-            Serial_String2 = horzcat( ...
-                num2str(handles.P_motor_value*10),' ',num2str(handles.I_motor_value*10),' ',num2str(handles.D_motor_value*10),' ',num2str(handles.n_motor_value),' ', ...
-                num2str(handles.P_ctl_value*10),' ',num2str(handles.I_ctl_value*10),' ',num2str(handles.D_ctl_value*10),' ',num2str(handles.n_ctl_value),' ', ...
-                '0',' ',num2str(handles.set_mode),' ',num2str(handles.refHeight),' ', num2str(handles.start))
-            writeline(handles.arduino, Serial_String2);
+            if isnan(handles.refHeight) || handles.refHeight < 0 || handles.refHeight > 500
+                handles.refHeight = 250;
+                set(inputRefHeight, 'String', '250');
+            end
+            handles.serial_string = horzcat( ...
+                num2str(handles.P_motor_value*handles.decimal),' ',num2str(handles.I_motor_value*handles.decimal),' ',num2str(handles.D_motor_value*handles.decimal),' ',num2str(handles.n_motor_value),' ', ...
+                num2str(handles.P_ctl_value*handles.decimal),' ',num2str(handles.I_ctl_value*handles.decimal),' ',num2str(handles.D_ctl_value*handles.decimal),' ',num2str(handles.n_ctl_value),' ', ...
+                '0',' ',num2str(handles.set_mode),' ',num2str(handles.refHeight),' ',num2str(handles.start))
+            writeline(handles.arduino, handles.serial_string);
+        handles = guidata(hFig);
         guidata(hFig, handles);
     end
 
@@ -439,6 +452,8 @@ function ball_motor_gui(arduino)
     end
 
     function updatePID(~, ~)
+        handles = guidata(hFig);
+        handles.start = regulators.start;
         % Get the current values of P, I, D, and n
         if strcmp(currentRegulator, 'CascadedControl')
             handles.P_ctl_value = regulators.(currentRegulator).Outer.P;
@@ -478,11 +493,11 @@ function ball_motor_gui(arduino)
             set(inputFields(i), 'BackgroundColor', originalBackgroundColor);  
         end
        
-        Serial_String3 = horzcat( ...
-            num2str(handles.P_motor_value*10),' ',num2str(handles.I_motor_value*10),' ',num2str(handles.D_motor_value*10),' ',num2str(handles.n_motor_value),' ', ...
-            num2str(handles.P_ctl_value*10),' ',num2str(handles.I_ctl_value*10),' ',num2str(handles.D_ctl_value*10),' ',num2str(handles.n_ctl_value),' ', ...
+        handles.serial_string = horzcat( ...
+            num2str(handles.P_motor_value*handles.decimal),' ',num2str(handles.I_motor_value*handles.decimal),' ',num2str(handles.D_motor_value*handles.decimal),' ',num2str(handles.n_motor_value),' ', ...
+            num2str(handles.P_ctl_value*handles.decimal),' ',num2str(handles.I_ctl_value*handles.decimal),' ',num2str(handles.D_ctl_value*handles.decimal),' ',num2str(handles.n_ctl_value),' ', ...
             '0',' ',num2str(handles.set_mode),' ',num2str(handles.refHeight),' ',num2str(handles.start))
-        writeline(handles.arduino, Serial_String3)
+        writeline(handles.arduino, handles.serial_string)
 
     end
 
