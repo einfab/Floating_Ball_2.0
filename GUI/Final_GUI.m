@@ -86,7 +86,7 @@ function ball_motor_gui(arduino)
     PIDContolImage='PID.jpg';
     Controlerimage = axes('Parent', hFig, ...
                  'Units', 'pixels', ...
-                 'Position', [20, 350, 665, 300]);
+                 'Position', [20, 370, 665, 220]);
     
 
     %Text field for the P value of the controller
@@ -422,7 +422,7 @@ function ball_motor_gui(arduino)
         currentRegulator = items{get(src, 'Value')};
         if strcmp(currentRegulator, 'MotorControl')
              img = imread(MotorContolImage); 
-             imshow(img, 'Parent', Controlerimage);
+             imshow(img, 'Parent', Controlerimage, 'InitialMagnification', 'fit');
              set(kP_text, 'Visible', 'off');
              set(inputP, 'Visible', 'off');
              set(inputP_out, 'Visible', 'off');
@@ -445,7 +445,7 @@ function ball_motor_gui(arduino)
              MotorControl_text.Visible = 'off';
         elseif strcmp(currentRegulator, 'PIDControl')
              img = imread(PIDContolImage); 
-             imshow(img, 'Parent', Controlerimage);
+             imshow(img, 'Parent', Controlerimage, 'InitialMagnification', 'fit');
              set(kP_text, 'Visible', 'on');
              set(inputP, 'Visible', 'on');
              set(inputP, 'Enable', 'on');
@@ -472,7 +472,7 @@ function ball_motor_gui(arduino)
              MotorControl_text.Visible = 'off';
         else
              img = imread(CascadeImage); 
-             imshow(img, 'Parent', Controlerimage);
+             imshow(img, 'Parent', Controlerimage, 'InitialMagnification', 'fit');
              set(kP_text, 'Visible', 'on');
              set(inputP, 'Visible', 'on');
              set(inputP_out, 'Visible', 'on');
