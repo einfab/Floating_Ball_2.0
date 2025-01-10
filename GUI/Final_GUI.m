@@ -232,8 +232,8 @@ function ball_motor_gui(arduino)
     handles.D_motor_value = 3.5;
     handles.n_motor_value = 4;
     handles.decimal = 100;
-    guidata(hFig, handles);
     handles.start = 0;
+    guidata(hFig, handles);
 
     handles.serial_string = horzcat( ...
         num2str(handles.P_motor_value*handles.decimal),' ',num2str(handles.I_motor_value*handles.decimal),' ',num2str(handles.D_motor_value*handles.decimal),' ',num2str(handles.n_motor_value),' ', ...
@@ -247,16 +247,62 @@ function ball_motor_gui(arduino)
     function startCallback(~, ~)
         %writeline(handles.arduino, num2str(handles.refHeight));
         %Controller Values are multiplied by 1000 to avoid using double (P,I,D)
+        handles = guidata(hFig);
         regulators.start = 1;
         handles.start = regulators.start;
-        handles.decimal
+        
+        if strcmp(currentRegulator, 'CascadedControl')
+            if(MotorControl.Value==1)
+                handles.set_mode = 3;
+                handles.refHeight = str2double(get(inputRotation, 'String'));
+            elseif(HeightControl.Value==1)
+                handles.set_mode = 4;
+                handles.refHeight = str2double(get(inputRefHeight, 'String'));
+            else
+                handles.set_mode = 4;
+            end
+            handles.P_ctl_value = regulators.(currentRegulator).Outer.P;
+            handles.I_ctl_value = regulators.(currentRegulator).Outer.I;
+            handles.D_ctl_value = regulators.(currentRegulator).Outer.D;
+            handles.n_ctl_value = regulators.(currentRegulator).Outer.n;
+
+            handles.P_motor_value = regulators.(currentRegulator).Inner.P;
+            handles.I_motor_value = regulators.(currentRegulator).Inner.I;
+            handles.D_motor_value = regulators.(currentRegulator).Inner.D;
+            handles.n_motor_value = regulators.(currentRegulator).Inner.n;
+            
+            % handles.set_mode = 3; % TODO: Maybe order still needs to be changed
+            
+        elseif strcmp(currentRegulator, 'PIDControl')
+            handles.P_motor_value = regulators.(currentRegulator).P;
+            handles.I_motor_value = regulators.(currentRegulator).I;
+            handles.D_motor_value = regulators.(currentRegulator).D;
+            handles.n_motor_value = regulators.(currentRegulator).n;
+            handles.set_mode = 2; % TODO: Maybe order still needs to be changed
+            handles.refHeight = str2double(get(inputRefHeight, 'String'));
+        else
+            handles.set_mode = 1; % TODO: Maybe order still needs to be changed
+
+            % Basic Values to avoid errors when loading first
+            handles.P_motor_value = 0; 
+            handles.I_motor_value = 0; 
+            handles.D_motor_value = 0; 
+            handles.n_motor_value = 0; 
+            
+            handles.P_ctl_value = 0; 
+            handles.I_ctl_value = 0; 
+            handles.D_ctl_value = 0; 
+            handles.n_ctl_value = 0; 
+            handles.refHeight = str2double(get(inputRotation, 'String'));
+        end
+
         handles.serial_string = horzcat( ...
             num2str(handles.P_motor_value*handles.decimal),' ',num2str(handles.I_motor_value*handles.decimal),' ',num2str(handles.D_motor_value*handles.decimal),' ',num2str(handles.n_motor_value),' ', ...
             num2str(handles.P_ctl_value*handles.decimal),' ',num2str(handles.I_ctl_value*handles.decimal),' ',num2str(handles.D_ctl_value*handles.decimal),' ',num2str(handles.n_ctl_value),' ', ...
             '0',' ',num2str(handles.set_mode),' ',num2str(handles.refHeight),' ',num2str(handles.start))
         writeline(handles.arduino, handles.serial_string);
         %writeline(handles.arduino, "15 45 35 4 55 65 75 8 9 2 3 4");
-        handles = guidata(hFig);
+        
         handles.isRunning = true;
         start(handles.t);
         set(handles.saveButton, 'Enable', 'off');
@@ -267,15 +313,16 @@ function ball_motor_gui(arduino)
     
     function stopCallback(~, ~)
         %writeline(handles.arduino, '0'); %Not to change anymore :)
+        handles = guidata(hFig);
         regulators.start = 0;
         handles.start = regulators.start;
+
         handles.serial_string = horzcat( ...
             num2str(handles.P_motor_value*handles.decimal),' ',num2str(handles.I_motor_value*handles.decimal),' ',num2str(handles.D_motor_value*handles.decimal),' ',num2str(handles.n_motor_value),' ', ...
             num2str(handles.P_ctl_value*handles.decimal),' ',num2str(handles.I_ctl_value*handles.decimal),' ',num2str(handles.D_ctl_value*handles.decimal),' ',num2str(handles.n_ctl_value),' ', ...
             '0',' ',num2str(handles.set_mode),' ',num2str(handles.refHeight),' ',num2str(handles.start))
         writeline(handles.arduino, handles.serial_string);
-        flush(handles.arduino);
-        handles = guidata(hFig);
+        flush(handles.arduino,"input");
         handles.isRunning = false;
         stop(handles.t);
         set(handles.saveButton, 'Enable', 'on');
@@ -290,7 +337,7 @@ function ball_motor_gui(arduino)
             %writeline(handles.arduino, num2str(handles.refHeight));
         end
         handles = guidata(hFig);
-        handles.refHeight = str2double(get(src, 'String'))
+        handles.refHeight = str2double(get(src, 'String'));
         if isnan(handles.refHeight) || handles.refHeight < 0 || handles.refHeight > 500
             handles.refHeight = 250;
             set(src, 'String', '250');
@@ -310,6 +357,15 @@ function ball_motor_gui(arduino)
         %writeline(handles.arduino, num2str(handles.refHeight));
              % Get the current values of P, I, D, and n
         if strcmp(currentRegulator, 'CascadedControl')
+            if(MotorControl.Value==1)
+                handles.set_mode = 3;
+                handles.refHeight = str2double(get(inputRotation, 'String'));
+            elseif(HeightControl.Value==1)
+                handles.set_mode = 4;
+                handles.refHeight = str2double(get(inputRefHeight, 'String'));
+            else
+                handles.set_mode = 4;
+            end
             handles.P_ctl_value = regulators.(currentRegulator).Outer.P;
             handles.I_ctl_value = regulators.(currentRegulator).Outer.I;
             handles.D_ctl_value = regulators.(currentRegulator).Outer.D;
@@ -320,15 +376,15 @@ function ball_motor_gui(arduino)
             handles.D_motor_value = regulators.(currentRegulator).Inner.D;
             handles.n_motor_value = regulators.(currentRegulator).Inner.n;
             
-            handles.set_mode = 3; % TODO: Maybe order still needs to be changed
-            handles.refHeight = str2double(get(inputRefHeight, 'String'))
+            % handles.set_mode = 3; % TODO: Maybe order still needs to be changed
+            
         elseif strcmp(currentRegulator, 'PIDControl')
             handles.P_motor_value = regulators.(currentRegulator).P;
             handles.I_motor_value = regulators.(currentRegulator).I;
             handles.D_motor_value = regulators.(currentRegulator).D;
             handles.n_motor_value = regulators.(currentRegulator).n;
             handles.set_mode = 2; % TODO: Maybe order still needs to be changed
-            handles.refHeight = str2double(get(inputRefHeight, 'String'))
+            handles.refHeight = str2double(get(inputRefHeight, 'String'));
         else
             handles.set_mode = 1; % TODO: Maybe order still needs to be changed
 
@@ -354,7 +410,7 @@ function ball_motor_gui(arduino)
                 num2str(handles.P_ctl_value*handles.decimal),' ',num2str(handles.I_ctl_value*handles.decimal),' ',num2str(handles.D_ctl_value*handles.decimal),' ',num2str(handles.n_ctl_value),' ', ...
                 '0',' ',num2str(handles.set_mode),' ',num2str(handles.refHeight),' ',num2str(handles.start))
             writeline(handles.arduino, handles.serial_string);
-        handles = guidata(hFig);
+        % handles = guidata(hFig);
         guidata(hFig, handles);
     end
 
@@ -456,6 +512,13 @@ function ball_motor_gui(arduino)
         handles.start = regulators.start;
         % Get the current values of P, I, D, and n
         if strcmp(currentRegulator, 'CascadedControl')
+            if(MotorControl.Value==1)
+                handles.set_mode = 3;
+            elseif(HeightControl.Value==1)
+                handles.set_mode = 4;
+            else
+                handles.set_mode = 4;
+            end
             handles.P_ctl_value = regulators.(currentRegulator).Outer.P;
             handles.I_ctl_value = regulators.(currentRegulator).Outer.I;
             handles.D_ctl_value = regulators.(currentRegulator).Outer.D;
@@ -465,8 +528,7 @@ function ball_motor_gui(arduino)
             handles.I_motor_value = regulators.(currentRegulator).Inner.I;
             handles.D_motor_value = regulators.(currentRegulator).Inner.D;
             handles.n_motor_value = regulators.(currentRegulator).Inner.n;
-            
-            handles.set_mode = 3; % TODO: Maybe order still needs to be changed
+
         elseif strcmp(currentRegulator, 'PIDControl')
             handles.P_motor_value = regulators.(currentRegulator).P;
             handles.I_motor_value = regulators.(currentRegulator).I;

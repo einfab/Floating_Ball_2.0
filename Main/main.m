@@ -24,7 +24,7 @@ if exist('baudRate', 'var') == 0
   %   baudRate = 19200;
   %   timeout = 10;
   %   arduino = serialport('COM5', baudRate, 'Timeout', timeout);
-  %   configureTerminator(arduino,59,"LF");
+  configureTerminator(arduino,59,"LF");
 end
 
 guiName = 'Ball and Motor Control';
