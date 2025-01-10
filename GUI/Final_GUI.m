@@ -233,12 +233,13 @@ function ball_motor_gui(arduino)
     handles.n_motor_value = 4;
     handles.decimal = 100;
     handles.start = 0;
+    handles.loops = 3;
     guidata(hFig, handles);
 
     handles.serial_string = horzcat( ...
         num2str(handles.P_motor_value*handles.decimal),' ',num2str(handles.I_motor_value*handles.decimal),' ',num2str(handles.D_motor_value*handles.decimal),' ',num2str(handles.n_motor_value),' ', ...
         num2str(handles.P_ctl_value*handles.decimal),' ',num2str(handles.I_ctl_value*handles.decimal),' ',num2str(handles.D_ctl_value*handles.decimal),' ',num2str(handles.n_ctl_value),' ', ...
-        '0',' ',num2str(handles.set_mode),' ',num2str(handles.refHeight),' ',num2str(handles.start))
+        num2str(handles.loops),' ',num2str(handles.set_mode),' ',num2str(handles.refHeight),' ',num2str(handles.start))
 
     updateRegulatorSelection(dropdown, [])
     guidata(hFig, handles);
@@ -247,6 +248,7 @@ function ball_motor_gui(arduino)
     function startCallback(~, ~)
         %writeline(handles.arduino, num2str(handles.refHeight));
         %Controller Values are multiplied by 1000 to avoid using double (P,I,D)
+        flush(handles.arduino);
         handles = guidata(hFig);
         regulators.start = 1;
         handles.start = regulators.start;
@@ -299,7 +301,7 @@ function ball_motor_gui(arduino)
         handles.serial_string = horzcat( ...
             num2str(handles.P_motor_value*handles.decimal),' ',num2str(handles.I_motor_value*handles.decimal),' ',num2str(handles.D_motor_value*handles.decimal),' ',num2str(handles.n_motor_value),' ', ...
             num2str(handles.P_ctl_value*handles.decimal),' ',num2str(handles.I_ctl_value*handles.decimal),' ',num2str(handles.D_ctl_value*handles.decimal),' ',num2str(handles.n_ctl_value),' ', ...
-            '0',' ',num2str(handles.set_mode),' ',num2str(handles.refHeight),' ',num2str(handles.start))
+            num2str(handles.loops),' ',num2str(handles.set_mode),' ',num2str(handles.refHeight),' ',num2str(handles.start))
         writeline(handles.arduino, handles.serial_string);
         %writeline(handles.arduino, "15 45 35 4 55 65 75 8 9 2 3 4");
         
@@ -320,9 +322,9 @@ function ball_motor_gui(arduino)
         handles.serial_string = horzcat( ...
             num2str(handles.P_motor_value*handles.decimal),' ',num2str(handles.I_motor_value*handles.decimal),' ',num2str(handles.D_motor_value*handles.decimal),' ',num2str(handles.n_motor_value),' ', ...
             num2str(handles.P_ctl_value*handles.decimal),' ',num2str(handles.I_ctl_value*handles.decimal),' ',num2str(handles.D_ctl_value*handles.decimal),' ',num2str(handles.n_ctl_value),' ', ...
-            '0',' ',num2str(handles.set_mode),' ',num2str(handles.refHeight),' ',num2str(handles.start))
+            num2str(handles.loops),' ',num2str(handles.set_mode),' ',num2str(handles.refHeight),' ',num2str(handles.start))
         writeline(handles.arduino, handles.serial_string);
-        flush(handles.arduino,"input");
+        flush(handles.arduino);
         handles.isRunning = false;
         stop(handles.t);
         set(handles.saveButton, 'Enable', 'on');
@@ -408,7 +410,7 @@ function ball_motor_gui(arduino)
             handles.serial_string = horzcat( ...
                 num2str(handles.P_motor_value*handles.decimal),' ',num2str(handles.I_motor_value*handles.decimal),' ',num2str(handles.D_motor_value*handles.decimal),' ',num2str(handles.n_motor_value),' ', ...
                 num2str(handles.P_ctl_value*handles.decimal),' ',num2str(handles.I_ctl_value*handles.decimal),' ',num2str(handles.D_ctl_value*handles.decimal),' ',num2str(handles.n_ctl_value),' ', ...
-                '0',' ',num2str(handles.set_mode),' ',num2str(handles.refHeight),' ',num2str(handles.start))
+                num2str(handles.loops),' ',num2str(handles.set_mode),' ',num2str(handles.refHeight),' ',num2str(handles.start))
             writeline(handles.arduino, handles.serial_string);
         % handles = guidata(hFig);
         guidata(hFig, handles);
@@ -558,7 +560,7 @@ function ball_motor_gui(arduino)
         handles.serial_string = horzcat( ...
             num2str(handles.P_motor_value*handles.decimal),' ',num2str(handles.I_motor_value*handles.decimal),' ',num2str(handles.D_motor_value*handles.decimal),' ',num2str(handles.n_motor_value),' ', ...
             num2str(handles.P_ctl_value*handles.decimal),' ',num2str(handles.I_ctl_value*handles.decimal),' ',num2str(handles.D_ctl_value*handles.decimal),' ',num2str(handles.n_ctl_value),' ', ...
-            '0',' ',num2str(handles.set_mode),' ',num2str(handles.refHeight),' ',num2str(handles.start))
+            num2str(handles.loops),' ',num2str(handles.set_mode),' ',num2str(handles.refHeight),' ',num2str(handles.start))
         writeline(handles.arduino, handles.serial_string)
 
     end
