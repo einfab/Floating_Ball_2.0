@@ -1,6 +1,6 @@
 function ball_motor_gui(arduino)
 
-    Timerupdate = 0.5;
+    Timerupdate = 0.2;
     TimeWindow = 20; 
 
     originalBackgroundColor = [1, 1, 1]; 
@@ -40,7 +40,7 @@ function ball_motor_gui(arduino)
     hold(ax1, 'on');
     ballHeightPlot = plot(ax1, NaN, NaN, 'b', 'LineWidth', 2);
     refHeightPlot = plot(ax1, NaN, NaN, 'r--', 'LineWidth', 2);
-    ylim(ax1, [0, 500]);
+    ylim(ax1, [-10, 500]);
     
     % Plot for the rotations of the motor
     ax2 = axes('Parent', hFig, 'Position', [0.50, 0.39, 0.45, 0.25]);
@@ -50,7 +50,7 @@ function ball_motor_gui(arduino)
     grid(ax2, 'on');
     hold(ax2, 'on');
     motorSpeedPlot = plot(ax2, NaN, NaN, 'g', 'LineWidth', 2);
-    ylim(ax2, [0, 1000]);
+    ylim(ax2, [0, 3500]);
 
     % Plot for the voltage applied to the motor
     ax3 = axes('Parent', hFig, 'Position', [0.50, 0.06, 0.45, 0.25]);
@@ -340,7 +340,7 @@ function ball_motor_gui(arduino)
         end
         handles = guidata(hFig);
         handles.refHeight = str2double(get(src, 'String'));
-        if isnan(handles.refHeight) || handles.refHeight < 0 || handles.refHeight > 500
+        if isnan(handles.refHeight) || handles.refHeight < 0 || handles.refHeight > 3000
             handles.refHeight = 250;
             set(src, 'String', '250');
         end
@@ -403,7 +403,7 @@ function ball_motor_gui(arduino)
             handles.refHeight = str2double(get(inputRotation, 'String'))
         end
             %writeline(handles.arduino, "15 45 35 4 55 65 75 8 9 5 6 7");
-            if isnan(handles.refHeight) || handles.refHeight < 0 || handles.refHeight > 500
+            if isnan(handles.refHeight) || handles.refHeight < 0 || handles.refHeight > 3000
                 handles.refHeight = 250;
                 set(inputRefHeight, 'String', '250');
             end
