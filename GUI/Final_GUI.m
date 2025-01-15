@@ -45,12 +45,12 @@ function ball_motor_gui(arduino)
     % Plot for the rotations of the motor
     ax2 = axes('Parent', hFig, 'Position', [0.50, 0.39, 0.45, 0.25]);
     xlabel(ax2, 'time in s');
-    ylabel(ax2, 'rotations per minute');
-    title(ax2, 'Rotations');
+    ylabel(ax2, 'speed (rpm)');
+    title(ax2, 'speed of the motor');
     grid(ax2, 'on');
     hold(ax2, 'on');
     motorSpeedPlot = plot(ax2, NaN, NaN, 'g', 'LineWidth', 2);
-    ylim(ax2, [0, 3500]);
+    ylim(ax2, [0, 3200]);
 
     % Plot for the voltage applied to the motor
     ax3 = axes('Parent', hFig, 'Position', [0.50, 0.06, 0.45, 0.25]);
@@ -62,8 +62,8 @@ function ball_motor_gui(arduino)
     voltagePlot = plot(ax3, NaN, NaN, 'm', 'LineWidth', 2);
     ylim(ax3, [0, 12]);
 
-    % Text field for the set height
-    rotation_text = uicontrol('Style', 'text', 'Position', [30, 300, 150, 20], 'String', 'Set rotations (rpm):', ...
+    % Text field for the set motor speed
+    rotation_text = uicontrol('Style', 'text', 'Position', [30, 300, 150, 20], 'String', 'Set speed (rpm):', ...
               'HorizontalAlignment', 'right', 'FontSize', 10);
     inputRotation = uicontrol('Style', 'edit', 'Position', [180, 300, 100, 20], 'String', '200', ...
                                'Callback', @updateRefHeight);
@@ -168,13 +168,13 @@ function ball_motor_gui(arduino)
 
     % Save Button
     handles.saveButton = uicontrol('Style', 'pushbutton', 'String', 'Save-data', ...
-                                   'Position', [450, 120, 100, 40], 'Callback', @saveData);
+                                   'Position', [450, 170, 100, 40], 'Callback', @saveData);
     % Save changes button to apply the controller settings
     handles.saveChanges = uicontrol('Style', 'pushbutton', 'String', 'Save-changes', ...
-                                   'Position', [450, 70, 100, 40], 'Callback', @updatePID);
+                                   'Position', [450, 120, 100, 40], 'Callback', @updatePID);
     % Build and deploy button
     Build_deploy = uicontrol('Style', 'pushbutton', 'String', 'Build&Deploy', ...
-                                   'Position', [300, 70, 100, 40],'Visible','on', 'Callback', @BuildProgram);
+                                   'Position', [300, 70, 100, 40],'Visible','off', 'Callback', @BuildProgram);
   
     %Init State for GUI: Direct Motor Control
     img_init = imread(MotorContolImage); 
