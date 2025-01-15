@@ -350,7 +350,7 @@ function ball_motor_gui(arduino)
         elseif src == inputRotation
             handles.refSpeed = str2double(get(src, 'String'));
             if isnan(handles.refSpeed) || handles.refSpeed < 0 || handles.refSpeed > 3200
-                handles.refSpeed = 200;
+                handles.refHeight= 200;
                 set(src, 'String', '200');
                 set(handles.refSpeedPlot, 'Visible', 'on');
                 set(handles.refHeightPlot, 'Visible', 'off');
@@ -761,11 +761,21 @@ function ball_motor_gui(arduino)
             end
         end
 
-        set(handles.refHeightPlot, 'XData', handles.t_data, 'YData', handles.refHeight * ones(size(handles.t_data)));
+        % set(handles.refHeightPlot, 'XData', handles.t_data, 'YData', handles.refHeight * ones(size(handles.t_data)));
         set(handles.ballHeightPlot, 'XData', handles.t_data, 'YData', handles.ballHeightData);
         set(handles.motorSpeedPlot, 'XData', handles.t_data, 'YData', handles.motorSpeedData);
-        set(handles.refSpeedPlot, 'XData', handles.t_data, 'YData', handles.refSpeed * ones(size(handles.t_data)));
+        % set(handles.refSpeedPlot, 'XData', handles.t_data, 'YData', handles.refSpeed * ones(size(handles.t_data)));
         set(handles.voltagePlot, 'XData', handles.t_data, 'YData', handles.voltageData);
+        
+        if strcmp(get(inputRefHeight, 'Visible'), 'on')
+            set(handles.refHeightPlot, 'XData', handles.t_data, 'YData', handles.refHeight * ones(size(handles.t_data)));
+            set(handles.refHeightPlot, 'Visible', 'on');
+            set(handles.refSpeedPlot, 'Visible', 'off');
+        elseif strcmp(get(inputRotation, 'Visible'), 'on')
+            set(handles.refSpeedPlot, 'XData', handles.t_data, 'YData', handles.refHeight* ones(size(handles.t_data)));
+            set(handles.refSpeedPlot, 'Visible', 'on');
+            set(handles.refHeightPlot, 'Visible', 'off');
+        end
 
         if handles.t_data(end) > TimeWindow
             xlim(ax1, [handles.t_data(end)-TimeWindow, handles.t_data(end)]);
