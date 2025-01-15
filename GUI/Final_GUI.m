@@ -33,8 +33,8 @@ function ball_motor_gui(arduino)
     
     % Plot for the height of the ball
     ax1 = axes('Parent', hFig, 'Position', [0.50, 0.72, 0.45, 0.25]);
-    xlabel(ax1, 'time in s');
-    ylabel(ax1, 'height in mm');
+    xlabel(ax1, 'time (s)');
+    ylabel(ax1, 'height (mm)');
     title(ax1, 'Height of the ball');
     grid(ax1, 'on');
     hold(ax1, 'on');
@@ -44,7 +44,7 @@ function ball_motor_gui(arduino)
     
     % Plot for the rotations of the motor
     ax2 = axes('Parent', hFig, 'Position', [0.50, 0.39, 0.45, 0.25]);
-    xlabel(ax2, 'time in s');
+    xlabel(ax2, 'time (s)');
     ylabel(ax2, 'speed (rpm)');
     title(ax2, 'speed of the motor');
     grid(ax2, 'on');
@@ -54,8 +54,8 @@ function ball_motor_gui(arduino)
 
     % Plot for the voltage applied to the motor
     ax3 = axes('Parent', hFig, 'Position', [0.50, 0.06, 0.45, 0.25]);
-    xlabel(ax3, 'time in s');
-    ylabel(ax3, 'U in V');
+    xlabel(ax3, 'time (s)');
+    ylabel(ax3, 'U (V)');
     title(ax3, 'Motor voltage');
     grid(ax3, 'on');
     hold(ax3, 'on');
