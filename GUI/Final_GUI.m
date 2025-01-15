@@ -50,6 +50,8 @@ function ball_motor_gui(arduino)
     grid(ax2, 'on');
     hold(ax2, 'on');
     motorSpeedPlot = plot(ax2, NaN, NaN, 'g', 'LineWidth', 2);
+    refSpeedPlot = plot(ax2, NaN, NaN, 'r--', 'LineWidth', 2);
+
     ylim(ax2, [0, 3200]);
 
     % Plot for the voltage applied to the motor
@@ -209,13 +211,15 @@ function ball_motor_gui(arduino)
 
     handles.ballHeightPlot = ballHeightPlot;
     handles.motorSpeedPlot = motorSpeedPlot;
+    handles.refSpeedPlot = refSpeedPlot;
     handles.voltagePlot = voltagePlot;
     handles.refHeightPlot = refHeightPlot;
-    handles.t_data = [];
-    handles.ballHeightData = [];
-    handles.motorSpeedData = [];
-    handles.voltageData = [];
+    handles.t_data = 0;
+    handles.ballHeightData = 0;
+    handles.motorSpeedData = 0;
+    handles.voltageData = 0;
     handles.refHeight = 250;
+    handles.refSpeed = 250;
     handles.P = 1.0;
     handles.I = 0.5;
     handles.D = 0.1;
@@ -252,7 +256,6 @@ function ball_motor_gui(arduino)
         handles = guidata(hFig);
         regulators.start = 1;
         handles.start = regulators.start;
-        
         if strcmp(currentRegulator, 'CascadedControl')
             if(MotorControl.Value==1)
                 handles.set_mode = 3;
@@ -335,14 +338,23 @@ function ball_motor_gui(arduino)
     end
 
     function updateRefHeight(src, ~)
-        if handles.isRunning
-            %writeline(handles.arduino, num2str(handles.refHeight));
-        end
         handles = guidata(hFig);
-        handles.refHeight = str2double(get(src, 'String'));
-        if isnan(handles.refHeight) || handles.refHeight < 0 || handles.refHeight > 3000
-            handles.refHeight = 250;
-            set(src, 'String', '250');
+        if src == inputRefHeight
+            handles.refHeight = str2double(get(src, 'String'));
+            if isnan(handles.refHeight) || handles.refHeight < 0 || handles.refHeight > 3000
+                handles.refHeight = 250;
+                set(src, 'String', '250');
+                set(handles.refSpeedPlot, 'Visible', 'on');
+                set(handles.refHeightPlot, 'Visible', 'off');
+            end
+        elseif src == inputRotation
+            handles.refSpeed = str2double(get(src, 'String'));
+            if isnan(handles.refSpeed) || handles.refSpeed < 0 || handles.refSpeed > 3200
+                handles.refSpeed = 200;
+                set(src, 'String', '200');
+                set(handles.refSpeedPlot, 'Visible', 'on');
+                set(handles.refHeightPlot, 'Visible', 'off');
+            end
         end
         guidata(hFig, handles);
         set(inputRotation, 'BackgroundColor', modifiedBackgroundColor);
@@ -745,12 +757,14 @@ function ball_motor_gui(arduino)
                 handles.ballHeightData = handles.ballHeightData(validIndices);
                 handles.motorSpeedData = handles.motorSpeedData(validIndices);
                 handles.voltageData = handles.voltageData(validIndices);
+               
             end
         end
 
         set(handles.refHeightPlot, 'XData', handles.t_data, 'YData', handles.refHeight * ones(size(handles.t_data)));
         set(handles.ballHeightPlot, 'XData', handles.t_data, 'YData', handles.ballHeightData);
         set(handles.motorSpeedPlot, 'XData', handles.t_data, 'YData', handles.motorSpeedData);
+        set(handles.refSpeedPlot, 'XData', handles.t_data, 'YData', handles.refSpeed * ones(size(handles.t_data)));
         set(handles.voltagePlot, 'XData', handles.t_data, 'YData', handles.voltageData);
 
         if handles.t_data(end) > TimeWindow
