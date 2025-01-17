@@ -9,8 +9,8 @@ function ball_motor_gui(arduino)
 
     % Definition of the default parameters for the different controllers
     regulators = struct( ...
-        'PIDControl', struct('P', 2.0, 'I', 1.0, 'D', 0.2, 'n', 5), ...
-        'CascadedControl', struct( ...
+        'PID_Controller', struct('P', 2.0, 'I', 1.0, 'D', 0.2, 'n', 5), ...
+        'Cascaded_Controller', struct( ...
         'Outer', struct('P', 0.5, 'I', 0.2, 'D', 0.5, 'n', 2), ... 
         'Inner', struct('P', 1.0, 'I', 0.5, 'D', 0.1, 'n', 1) ...   
         ), ...
@@ -18,14 +18,14 @@ function ball_motor_gui(arduino)
     );
 
     previousValues = struct(...
-        'PIDControl', struct ('P', 2.0, 'I', 1.0, 'D', 0.2, 'n', 5), ...
-        'CascadedControl', struct( ...
+        'PID_Controller', struct ('P', 2.0, 'I', 1.0, 'D', 0.2, 'n', 5), ...
+        'Cascaded_Controller', struct( ...
         'Outer', struct('P', 0.5, 'I', 0.2, 'D', 0.5, 'n', 2), ...
         'Inner', struct('P', 1.0, 'I', 0.5, 'D', 0.1, 'n', 1) ...
         ) ...
     );
 
-    currentRegulator = 'PIDControl';
+    currentRegulator = 'PID_Controller';
 
     % Create the GUI
     hFig = figure('Position', [0, 50, 1500, 750], 'Name', 'Ball and Motor Control', ...
@@ -80,7 +80,7 @@ function ball_motor_gui(arduino)
     uicontrol('Style', 'text', 'Position', [-50, 648, 200, 40], 'String', 'Select Controller:', ...
               'HorizontalAlignment', 'right', 'FontSize', 12);
     dropdown = uicontrol('Style', 'popupmenu', 'Position', [160, 650, 200, 40], ...
-                         'String', {'MotorControl', 'PIDControl', 'CascadedControl'}, ...
+                         'String', {'Motor_Controller', 'PID_Controller', 'Cascaded_Controller'}, ...
                           'FontSize', 12,'Callback', @updateRegulatorSelection);
     % Image of the controler
     CascadeImage='Cascade.jpg';
@@ -256,7 +256,7 @@ function ball_motor_gui(arduino)
         handles = guidata(hFig);
         regulators.start = 1;
         handles.start = regulators.start;
-        if strcmp(currentRegulator, 'CascadedControl')
+        if strcmp(currentRegulator, 'Cascaded_Controller')
             if(MotorControl.Value==1)
                 handles.set_mode = 3;
                 handles.refHeight = str2double(get(inputRotation, 'String'));
@@ -278,7 +278,7 @@ function ball_motor_gui(arduino)
             
             % handles.set_mode = 3; % TODO: Maybe order still needs to be changed
             
-        elseif strcmp(currentRegulator, 'PIDControl')
+        elseif strcmp(currentRegulator, 'PID_Controller')
             handles.P_motor_value = regulators.(currentRegulator).P;
             handles.I_motor_value = regulators.(currentRegulator).I;
             handles.D_motor_value = regulators.(currentRegulator).D;
@@ -370,7 +370,7 @@ function ball_motor_gui(arduino)
         handles.start = regulators.start;
         %writeline(handles.arduino, num2str(handles.refHeight));
              % Get the current values of P, I, D, and n
-        if strcmp(currentRegulator, 'CascadedControl')
+        if strcmp(currentRegulator, 'Cascaded_Controller')
             if(MotorControl.Value==1)
                 handles.set_mode = 3;
                 handles.refHeight = str2double(get(inputRotation, 'String'));
@@ -392,7 +392,7 @@ function ball_motor_gui(arduino)
             
             % handles.set_mode = 3; % TODO: Maybe order still needs to be changed
             
-        elseif strcmp(currentRegulator, 'PIDControl')
+        elseif strcmp(currentRegulator, 'PID_Controller')
             handles.P_motor_value = regulators.(currentRegulator).P;
             handles.I_motor_value = regulators.(currentRegulator).I;
             handles.D_motor_value = regulators.(currentRegulator).D;
@@ -430,9 +430,9 @@ function ball_motor_gui(arduino)
 
 
     function updateRegulatorSelection(src, ~)
-        items = { 'MotorControl','PIDControl', 'CascadedControl'};
+        items = { 'Motor_Controller','PID_Controller', 'Cascaded_Controller'};
         currentRegulator = items{get(src, 'Value')};
-        if strcmp(currentRegulator, 'MotorControl')
+        if strcmp(currentRegulator, 'Motor_Controller')
              img = imread(MotorContolImage); 
              imshow(img, 'Parent', Controlerimage, 'InitialMagnification', 'fit');
              set(kP_text, 'Visible', 'off');
@@ -455,7 +455,7 @@ function ball_motor_gui(arduino)
              MotorControl.Visible =  'off';
              HeightControl_text.Visible = 'off';
              MotorControl_text.Visible = 'off';
-        elseif strcmp(currentRegulator, 'PIDControl')
+        elseif strcmp(currentRegulator, 'PID_Controller')
              img = imread(PIDContolImage); 
              imshow(img, 'Parent', Controlerimage, 'InitialMagnification', 'fit');
              set(kP_text, 'Visible', 'on');
@@ -525,7 +525,7 @@ function ball_motor_gui(arduino)
         handles = guidata(hFig);
         handles.start = regulators.start;
         % Get the current values of P, I, D, and n
-        if strcmp(currentRegulator, 'CascadedControl')
+        if strcmp(currentRegulator, 'Cascaded_Controller')
             if(MotorControl.Value==1)
                 handles.set_mode = 3;
             elseif(HeightControl.Value==1)
@@ -543,7 +543,7 @@ function ball_motor_gui(arduino)
             handles.D_motor_value = regulators.(currentRegulator).Inner.D;
             handles.n_motor_value = regulators.(currentRegulator).Inner.n;
 
-        elseif strcmp(currentRegulator, 'PIDControl')
+        elseif strcmp(currentRegulator, 'PID_Controller')
             handles.P_motor_value = regulators.(currentRegulator).P;
             handles.I_motor_value = regulators.(currentRegulator).I;
             handles.D_motor_value = regulators.(currentRegulator).D;
@@ -553,15 +553,15 @@ function ball_motor_gui(arduino)
             handles.set_mode = 1; % TODO: Maybe order still needs to be changed
         end
 
-        if strcmp(currentRegulator, 'PIDControl')
+        if strcmp(currentRegulator, 'PID_Controller')
             previousValues.PIDControl = regulators.PIDControl;
-        elseif strcmp(currentRegulator, 'CascadedControl')
+        elseif strcmp(currentRegulator, 'Cascaded_Controller')
             previousValues.CascadedControl = regulators.CascadedControl;
         end
         
         inputFields = [inputP, inputI, inputD, inputn];  
     
-        if strcmp(currentRegulator, 'CascadedControl')
+        if strcmp(currentRegulator, 'Cascaded_Controller')
             inputFields = [inputFields, inputP_out, inputI_out, inputD_out, inputn_out];
         end
 
@@ -578,14 +578,14 @@ function ball_motor_gui(arduino)
     end
 
     function updateParameterFields()
-            if(strcmp(currentRegulator, 'PIDControl'))
+            if(strcmp(currentRegulator, 'PID_Controller'))
             set(inputP, 'String', num2str(regulators.(currentRegulator).P));
             set(inputI, 'String', num2str(regulators.(currentRegulator).I));
             set(inputD, 'String', num2str(regulators.(currentRegulator).D));
             set(inputn, 'String', num2str(regulators.(currentRegulator).n));
             end
 
-            if(strcmp(currentRegulator, 'CascadedControl'))
+            if(strcmp(currentRegulator, 'Cascaded_Controller'))
             set(inputP, 'String', num2str(regulators.(currentRegulator).Inner.P));
             set(inputI, 'String', num2str(regulators.(currentRegulator).Inner.I));
             set(inputD, 'String', num2str(regulators.(currentRegulator).Inner.D));
@@ -599,14 +599,14 @@ function ball_motor_gui(arduino)
     end
 
     function updateRegulatorParameters(src, ~)
-        if(strcmp(currentRegulator, 'PIDControl'))
+        if(strcmp(currentRegulator, 'PID_Controller'))
             regulators.(currentRegulator).P = str2double(get(inputP, 'String'));
             regulators.(currentRegulator).I = str2double(get(inputI, 'String'));
             regulators.(currentRegulator).D = str2double(get(inputD, 'String'));
             regulators.(currentRegulator).n = str2double(get(inputn, 'String'));
         end
 
-        if(strcmp(currentRegulator, 'CascadedControl'))
+        if(strcmp(currentRegulator, 'Cascaded_Controller'))
             regulators.(currentRegulator).Inner.P = str2double(get(inputP, 'String'));
             regulators.(currentRegulator).Inner.I = str2double(get(inputI, 'String'));
             regulators.(currentRegulator).Inner.D = str2double(get(inputD, 'String'));
@@ -622,9 +622,9 @@ function ball_motor_gui(arduino)
     
         fieldName = get(src, 'Tag');
 
-        if strcmp(currentRegulator, 'PIDControl')
+        if strcmp(currentRegulator, 'PID_Controller')
             originalValue = previousValues.PIDControl.(fieldName);
-        elseif strcmp(currentRegulator, 'CascadedControl')
+        elseif strcmp(currentRegulator, 'Cascaded_Controller')
             if contains(fieldName, 'Outer') 
                 innerFieldName = erase(fieldName, 'Outer');
                 originalValue = previousValues.CascadedControl.Outer.(innerFieldName);
